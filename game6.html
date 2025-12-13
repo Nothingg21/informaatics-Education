@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Defense Operator - Simulasi Keamanan Jaringan</title>
+    <style>
+        :root {
+            --primary-color: #00f2ff;
+            --secondary-color: #0a0a0a;
+            --accent-green: #00ff41;
+            --accent-red: #ff2a2a;
+            --glass-bg: rgba(20, 30, 40, 0.7);
+            --glass-border: rgba(0, 242, 255, 0.3);
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--secondary-color);
+            color: white;
+            font-family: var(--font-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Latar Belakang Canvas Animasi */
+        #bgCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1a2a3a 0%, #000000 100%);
+        }
+
+        /* Efek Scanlines CRT Monitor */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Container Utama */
+        .game-container {
+            width: 90%;
+            max-width: 1000px;
+            height: 90vh;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Layar (Screen) Management */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Panel Glassmorphism */
+        .panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            font-family: var(--font-mono);
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--primary-color);
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(45deg, #0d3a4b, #155e75);
+            color: white;
+            border: 1px solid var(--primary-color);
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            background: var(--primary-color);
+            color: black;
+            box-shadow: 0 0 20px var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Gameplay UI */
+        .hud {
+            position: relative; 
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid var(--primary-color);
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            margin-bottom: 1rem; 
+            flex-shrink: 0; 
+        }
+
+        .hud-item span {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .health-bar {
+            width: 200px;
+            height: 20px;
+            background: #333;
+            border: 1px solid #555;
+            position: relative;
+            margin-top: 5px;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: var(--accent-green);
+            width: 100%;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        /* Central Monitor (Scenario Display) */
+        .threat-monitor {
+            width: 100%;
+            max-width: 700px;
+            min-height: 200px; 
+            background: black;
+            border: 2px solid #333;
+            margin: 0.5rem 0 1.5rem 0; 
+            padding: 20px;
+            font-family: var(--font-mono);
+            color: var(--accent-green);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 30px rgba(0, 50, 0, 0.5);
+        }
+
+        .threat-monitor::before {
+            content: "SYSTEM MONITORING...";
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            font-size: 0.7rem;
+            color: #555;
+        }
+
+        .scenario-text {
+            font-size: 1.1rem; 
+            margin-bottom: 1rem;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .scenario-detail {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 1rem;
+        }
+
+        .timer-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--primary-color);
+            width: 100%;
+        }
+
+        /* Action Buttons Grid */
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .action-btn {
+            background: rgba(20, 30, 40, 0.9);
+            border: 1px solid #444;
+            padding: 20px;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-radius: 8px;
+        }
+
+        .action-btn svg {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 10px;
+            fill: currentColor;
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 242, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.firewall:hover { border-color: #ff6b6b; color: #ff6b6b; }
+        .action-btn.encrypt:hover { border-color: #ffd93d; color: #ffd93d; }
+        .action-btn.scan:hover { border-color: #6c5ce7; color: #6c5ce7; }
+        .action-btn.allow:hover { border-color: #00ff41; color: #00ff41; }
+
+        /* Feedback Overlay */
+        #feedback-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 50;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseRed {
+            0% { box-shadow: 0 0 0 0 rgba(255, 42, 42, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 42, 42, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 42, 42, 0); }
+        }
+
+        .danger-state {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+            animation: pulseRed 1s infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Latar Belakang Visual -->
+    <canvas id="bgCanvas"></canvas>
+    <div class="scanlines"></div>
+
+    <!-- Container Game Utama -->
+    <div class="game-container">
+
+        <!-- 1. Layar Awal (FORM LOGIN DIHAPUS) -->
+        <div id="start-screen" class="screen active">
+            <div class="panel">
+                <h1>Cyber Defense Operator</h1>
+                <p style="margin-bottom: 20px; color: #aaa;">Simulasi Pertahanan Jaringan & Identifikasi Ancaman</p>
+                
+                <div style="margin: 30px 0; font-family: var(--font-mono); color: var(--accent-green);">
+                    > SYSTEM READY<br>
+                    > WAITING FOR USER INPUT...
+                </div>
+
+                <button class="btn" onclick="startGame()">MULAI SIMULASI</button>
+            </div>
+        </div>
+
+        <!-- 2. Layar Gameplay -->
+        <div id="game-screen" class="screen">
+            <!-- HUD -->
+            <div class="hud">
+                <div class="hud-item">Operator: <span id="display-name">UNKNOWN</span></div>
+                <div class="hud-item">Skor Integritas: <span id="score">0</span></div>
+            </div>
+
+            <!-- Monitor Ancaman -->
+            <div class="threat-monitor" id="monitor">
+                <div style="position:absolute; top:10px; right:10px; font-size:0.8rem;">STATUS: <span id="status-text">ACTIVE</span></div>
+                <h2 id="scenario-title" style="margin-bottom: 10px; color: white;">MENUNGGU PAKET DATA...</h2>
+                <p id="scenario-desc" class="scenario-text">Sistem sedang memindai lalu lintas jaringan...</p>
+                <div id="scenario-detail" class="scenario-detail">Port: 80 | Protocol: TCP</div>
+                
+                <!-- Health Bar (Server Integrity) -->
+                <div style="width: 100%; max-width: 400px; margin-top: 20px;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px;">
+                        <span>KESEHATAN SERVER</span>
+                        <span id="health-text">100%</span>
+                    </div>
+                    <div class="health-bar">
+                        <div class="health-fill" id="health-fill"></div>
+                    </div>
+                </div>
+
+                <div class="timer-line" id="timer-line"></div>
+            </div>
+
+            <!-- Panel Kontrol -->
+            <div class="control-panel">
+                <!-- Tombol 1: Firewall -->
+                <button class="action-btn firewall" onclick="handleAction('firewall')">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3zm0 17.9c-3.97-1.12-7-5.45-7-9.9V6.3l7-2.6 7 2.6v4.7c0 4.45-3.03 8.78-7 9.9zM11 7h2v6h-2zm0 8h2v2h-2z"/></svg>
+                    <strong>FIREWALL BLOCK</strong>
+                    <small>Cegah Akses Tidak Sah / Port Scan</small>
+                </button>
+
+                <!-- Tombol 2: VPN / Enkripsi -->
+                <button class="action-btn encrypt" onclick="handleAction('encrypt')">
+                    <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                    <strong>ENKRIPSI / VPN</strong>
+                    <small>Amankan Data / Sniffing / WiFi Publik</small>
+                </button>
+
+                <!-- Tombol 3: Antivirus -->
+                <button class="action-btn scan" onclick="handleAction('antivirus')">
+                    <svg viewBox="0 0 24 24"><path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z"/></svg>
+                    <strong>ANTIVIRUS SCAN</strong>
+                    <small>Deteksi Malware / File Mencurigakan</small>
+                </button>
+
+                <!-- Tombol 4: Allow / Ignore -->
+                <button class="action-btn allow" onclick="handleAction('allow')">
+                    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    <strong>IZINKAN TRAFIK</strong>
+                    <small>Lalu Lintas Normal / Aman</small>
+                </button>
+            </div>
+
+            <!-- Feedback Overlay -->
+            <div id="feedback-overlay"></div>
+        </div>
+
+        <!-- 3. Layar Akhir -->
+        <div id="game-over-screen" class="screen">
+            <div class="panel">
+                <h1 id="end-title" style="color: var(--accent-red);">SISTEM JEBOL!</h1>
+                <p>Laporan Akhir Simulasi</p>
+                <br>
+                <div style="text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <p><strong>Status:</strong> <span id="end-status">MISSION FAILED</span></p>
+                    <hr style="border-color: #333; margin: 10px 0;">
+                    <p style="font-size: 1.5rem; text-align: center;">Skor Akhir: <span id="end-score" style="color: var(--primary-color);"></span></p>
+                </div>
+                
+                <button class="btn" onclick="location.reload()">Reboot Sistem (Main Lagi)</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA SOAL / SKENARIO ---
+        const scenarios = [
+            // --- Kategori: FIREWALL BLOCK (4 Soal) ---
+            {
+                title: "INCOMING EMAIL",
+                desc: "Email dari 'admin@g00gle-security.com' meminta Anda login segera untuk verifikasi akun.",
+                detail: "Source: External IP | Attachment: None | Link: Suspicious",
+                type: "phishing",
+                correctAction: "firewall", 
+                feedback: "Benar! Itu adalah Phishing. Domain dipalsukan.",
+                wrongFeedback: "Salah! Phishing harus diblokir agar data tidak dicuri."
+            },
+            {
+                title: "PORT SCAN DETECTED",
+                desc: "Sebuah IP asing mencoba melakukan ping ke semua port (1-1024) server Anda secara berurutan.",
+                detail: "Activity: Rapid Requests | Source: Unknown IP",
+                type: "scanning",
+                correctAction: "firewall", 
+                feedback: "Bagus! Firewall memblokir upaya Port Scanning.",
+                wrongFeedback: "Hati-hati! Port Scanning adalah tahap awal serangan."
+            },
+            {
+                title: "SERANGAN DDOS",
+                desc: "Lonjakan lalu lintas data tiba-tiba sebesar 500% dari ribuan IP berbeda.",
+                detail: "Alert: High Traffic Volume | Packet Loss: High",
+                type: "ddos",
+                correctAction: "firewall",
+                feedback: "Tepat! Firewall/IPS harus memfilter paket sampah dari serangan DDoS.",
+                wrongFeedback: "Sistem akan down jika DDoS tidak diblokir segera!"
+            },
+            {
+                title: "SQL INJECTION ATTEMPT",
+                desc: "Terdeteksi input 'OR 1=1' pada formulir login website perusahaan.",
+                detail: "Target: Database Query | Payload: Malicious SQL",
+                type: "hacking",
+                correctAction: "firewall", // Web Application Firewall (WAF)
+                feedback: "Hebat! WAF (Firewall) memblokir upaya injeksi database.",
+                wrongFeedback: "Bahaya! Hacker bisa mencuri database user dengan SQL Injection."
+            },
+
+            // --- Kategori: ENKRIPSI / VPN (4 Soal) ---
+            {
+                title: "JARINGAN WIFI PUBLIK",
+                desc: "Anda perlu mengirim data rahasia perusahaan saat bekerja di kedai kopi menggunakan WiFi gratis.",
+                detail: "Network: Public-Cafe-Free | Encryption: None",
+                type: "sniffing",
+                correctAction: "encrypt", 
+                feedback: "Tepat! VPN mengenkripsi data di jaringan publik (mencegah Sniffing).",
+                wrongFeedback: "Berbahaya! Data di WiFi publik mudah disadap (Sniffing) tanpa VPN."
+            },
+            {
+                title: "TRANSFER DATA GAJI",
+                desc: "Keuangan mengirim file payroll.csv melalui protokol FTP standar yang tidak terenkripsi.",
+                detail: "Protocol: FTP (Port 21) | Status: Unencrypted",
+                type: "sniffing",
+                correctAction: "encrypt", 
+                feedback: "Benar! FTP tidak aman. Harus dibungkus Enkripsi/SFTP.",
+                wrongFeedback: "Data gaji bisa dibaca siapa saja di jaringan jika tidak dienkripsi."
+            },
+            {
+                title: "KOMUNIKASI PENTING",
+                desc: "CEO ingin mengirim pesan teks rahasia ke Dewan Direksi.",
+                detail: "App: Standard SMS | Content: Top Secret",
+                type: "privacy",
+                correctAction: "encrypt", // Use Encrypted Messaging
+                feedback: "Bagus! Pesan rahasia harus menggunakan End-to-End Encryption.",
+                wrongFeedback: "SMS biasa mudah disadap. Gunakan enkripsi."
+            },
+            {
+                title: "AKSES REMOTE SERVER",
+                desc: "Seorang administrator IT mencoba mengakses server dari luar menggunakan SSH yang sudah terenkripsi.",
+                detail: "Protocol: SSH | Status: Verified User",
+                type: "normal_encrypt",
+                correctAction: "encrypt", // Aksi default yang sudah terenkripsi
+                feedback: "Benar. SSH adalah protokol aman, memastikan enkripsi berjalan baik adalah tindakan pencegahan yang bagus.",
+                wrongFeedback: "SSH sudah aman, tapi memblokirnya (Firewall) justru menghambat kerja admin."
+            },
+
+            // --- Kategori: ANTIVIRUS SCAN (4 Soal) ---
+            {
+                title: "FILE UNDUHAN",
+                desc: "Karyawan mengunduh 'bonus_gaji.pdf.exe' dari internet.",
+                detail: "File Type: Executable | Signature: Unknown",
+                type: "malware",
+                correctAction: "antivirus", 
+                feedback: "Benar! Ekstensi ganda (.pdf.exe) ciri khas Malware/Trojan. Antivirus menghapus.",
+                wrongFeedback: "Fatal! File .exe yang menyamar sangat berbahaya jika tidak di-scan segera."
+            },
+            {
+                title: "RANSOMWARE ALERT",
+                desc: "Beberapa file di server tiba-tiba berubah ekstensi menjadi .LOCKED.",
+                detail: "Activity: Mass File Encryption | CPU: 100%",
+                type: "malware",
+                correctAction: "antivirus", 
+                feedback: "Cepat! Sistem harus diisolasi dan dibersihkan dari Ransomware oleh Antivirus.",
+                wrongFeedback: "Terlambat menangani Ransomware bisa membuat data hilang selamanya."
+            },
+            {
+                title: "KEYLOGGER SUSPECT",
+                desc: "Keyboard karyawan merespons lambat dan ada proses latar belakang asing 'klog.exe'.",
+                detail: "Process: Unauthorized | Activity: Recording Keystrokes",
+                type: "spyware",
+                correctAction: "antivirus", 
+                feedback: "Tepat! Antivirus mendeteksi dan menghapus Spyware/Keylogger.",
+                wrongFeedback: "Keylogger akan mencuri semua password yang diketik jika dibiarkan."
+            },
+            {
+                title: "MEDIA PENYIMPANAN ASING",
+                desc: "USB Flashdisk ditemukan dicolokkan ke workstation tanpa izin. Dicurigai membawa Worm.",
+                detail: "Source: Unknown USB Drive | Risk: High",
+                type: "malware_usb",
+                correctAction: "antivirus", 
+                feedback: "Baik. Lakukan Full Scan segera pada USB drive asing tersebut.",
+                wrongFeedback: "USB asing harus selalu di-scan. Jika tidak, Worm bisa menyebar ke jaringan."
+            },
+
+            // --- Kategori: IZINKAN TRAFIK (4 Soal) ---
+            {
+                title: "LALU LINTAS HTTP INTERNAL",
+                desc: "Pengguna mengakses website intranet internal perusahaan (http://internal-portal).",
+                detail: "Source: Local LAN | Destination: Internal Server",
+                type: "normal",
+                correctAction: "allow", 
+                feedback: "Oke. Trafik internal yang valid diizinkan.",
+                wrongFeedback: "Itu trafik normal karyawan, tidak perlu diblokir."
+            },
+            {
+                title: "AKSES VPN RESMI",
+                desc: "Manajer IT mengakses server dari rumah menggunakan kunci VPN perusahaan yang valid.",
+                detail: "Auth: Verified | Tunnel: Encrypted",
+                type: "normal",
+                correctAction: "allow",
+                feedback: "Benar. Akses terotentikasi dan aman boleh lewat.",
+                wrongFeedback: "Jangan blokir akses kerja yang sah dan aman."
+            },
+            {
+                title: "UPDATE WINDOWS RESMI",
+                desc: "Server mencoba mengunduh patch keamanan resmi dari update.microsoft.com.",
+                detail: "Domain: Trusted | Signature: Valid",
+                type: "normal",
+                correctAction: "allow",
+                feedback: "Tepat. Update keamanan sangat penting untuk sistem. Izinkan.",
+                wrongFeedback: "Memblokir update keamanan membuat sistem rentan."
+            },
+            {
+                title: "TRAFIK DNS NORMAL",
+                desc: "Komputer mencoba me-resolve nama domain ke IP Address menggunakan port 53.",
+                detail: "Protocol: UDP | Port: 53 (DNS)",
+                type: "normal",
+                correctAction: "allow",
+                feedback: "Ya. Trafik DNS adalah hal yang wajib ada agar internet berfungsi.",
+                wrongFeedback: "Memblokir DNS akan mematikan akses internet semua pengguna."
+            },
+        ];
+
+        // --- VARIABEL GAME ---
+        let playerName = "OPERATOR"; // Default
+        let score = 0;
+        let health = 100;
+        let currentScenarioIndex = 0;
+        let isGameRunning = false;
+        let gameQueue = []; 
+
+        // --- INITIALISASI BACKGROUND CANVAS ---
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 1;
+                this.vy = (Math.random() - 0.5) * 1;
+                this.size = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(0, 242, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 50; i++) particles.push(new Particle());
+
+        function animateBg() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            ctx.strokeStyle = 'rgba(0, 242, 255, 0.1)';
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+
+        // --- LOGIKA GAME ---
+
+        function startGame() {
+            // Update UI Info Default
+            document.getElementById('display-name').innerText = "CYBER UNIT";
+
+            // Reset Game State
+            score = 0;
+            health = 100;
+            updateHealthUI();
+            document.getElementById('score').innerText = score;
+
+            // Acak Soal
+            gameQueue = [...scenarios].sort(() => 0.5 - Math.random());
+            currentScenarioIndex = 0;
+
+            // Pindah Layar
+            switchScreen('game-screen');
+            isGameRunning = true;
+            
+            // Load soal pertama
+            setTimeout(loadNextScenario, 1000);
+        }
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function loadNextScenario() {
+            if (!isGameRunning) return;
+
+            if (currentScenarioIndex >= gameQueue.length) {
+                endGame(true); // Menang (selesai semua soal)
+                return;
+            }
+
+            const current = gameQueue[currentScenarioIndex];
+            const monitor = document.getElementById('monitor');
+            
+            // Efek refresh monitor
+            monitor.style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById('scenario-title').innerText = current.title;
+                document.getElementById('scenario-desc').innerText = current.desc;
+                document.getElementById('scenario-detail').innerText = current.detail;
+                
+                // Jika tipe ancaman, ubah warna monitor
+                if (current.type.includes('malware') || current.type.includes('phishing') || current.type.includes('scanning') || current.type.includes('ddos') || current.type.includes('hacking')) {
+                    monitor.classList.add('danger-state');
+                    document.getElementById('status-text').innerText = "THREAT DETECTED";
+                    document.getElementById('status-text').style.color = "red";
+                } else {
+                    monitor.classList.remove('danger-state');
+                    document.getElementById('status-text').innerText = "TRAFFIC ANALYSIS";
+                    document.getElementById('status-text').style.color = "#00ff41";
+                }
+
+                monitor.style.opacity = 1;
+            }, 200);
+        }
+
+        function handleAction(action) {
+            if (!isGameRunning) return;
+
+            const current = gameQueue[currentScenarioIndex];
+            let isCorrect = false;
+
+            if (action === current.correctAction) {
+                isCorrect = true;
+            }
+
+            showFeedback(isCorrect, current);
+        }
+
+        function showFeedback(isCorrect, scenarioData) {
+            const overlay = document.getElementById('feedback-overlay');
+            const monitor = document.getElementById('monitor');
+
+            if (isCorrect) {
+                // Benar
+                score += 100;
+                document.getElementById('score').innerText = score;
+                overlay.style.backgroundColor = "rgba(0, 255, 65, 0.3)";
+                document.getElementById('scenario-desc').innerText = `[SUKSES] ${scenarioData.feedback}`;
+            } else {
+                // Salah
+                health -= 25;
+                updateHealthUI();
+                overlay.style.backgroundColor = "rgba(255, 42, 42, 0.4)";
+                document.getElementById('scenario-desc').innerText = `[GAGAL] ${scenarioData.wrongFeedback}`;
+                
+                // Efek getar
+                monitor.style.transform = "translateX(10px)";
+                setTimeout(()=> monitor.style.transform = "translateX(-10px)", 50);
+                setTimeout(()=> monitor.style.transform = "translateX(5px)", 100);
+                setTimeout(()=> monitor.style.transform = "translateX(0)", 150);
+            }
+
+            overlay.style.opacity = 1;
+
+            // Jeda sebelum soal berikutnya
+            setTimeout(() => {
+                overlay.style.opacity = 0;
+                
+                if (health <= 0) {
+                    endGame(false);
+                } else {
+                    currentScenarioIndex++;
+                    loadNextScenario();
+                }
+            }, 2000);
+        }
+
+        function updateHealthUI() {
+            const fill = document.getElementById('health-fill');
+            const text = document.getElementById('health-text');
+            
+            fill.style.width = health + "%";
+            text.innerText = health + "%";
+
+            if (health > 50) {
+                fill.style.backgroundColor = "#00ff41";
+            } else if (health > 25) {
+                fill.style.backgroundColor = "yellow";
+            } else {
+                fill.style.backgroundColor = "red";
+            }
+        }
+
+        function endGame(isWin) {
+            isGameRunning = false;
+            switchScreen('game-over-screen');
+            
+            document.getElementById('end-score').innerText = score;
+            
+            const title = document.getElementById('end-title');
+            const status = document.getElementById('end-status');
+            
+            if (isWin) {
+                title.innerText = "MISI SELESAI!";
+                title.style.color = "#00ff41";
+                status.innerText = "SYSTEM SECURED";
+            } else {
+                title.innerText = "SISTEM JEBOL!";
+                title.style.color = "red";
+                status.innerText = "CRITICAL FAILURE";
+            }
+        }
+    </script>
+</body>
+</html>

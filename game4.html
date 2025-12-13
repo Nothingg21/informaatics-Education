@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neuro: The Data Quest - Game Edukasi AI</title>
+    <style>
+        /* --- RESET & LAYOUT UTAMA --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace; /* Font Retro */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: #1a1a2e; /* Dark Blue/Black Retro */
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- CONTAINER GAME --- */
+        #game-container {
+            position: relative;
+            width: 800px;
+            max-width: 100%;
+            height: 450px; /* Rasio 16:9 */
+            background-color: #000;
+            border: 4px solid #4ecca3; /* Neon Green Border */
+            box-shadow: 0 0 20px rgba(78, 204, 163, 0.4);
+            overflow: hidden;
+        }
+
+        /* --- CANVAS --- */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated; /* Kunci untuk tampilan Pixel Art tajam */
+        }
+
+        /* --- UI OVERLAY (Skor, Nyawa) --- */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none; /* Agar klik tembus ke game */
+            text-shadow: 2px 2px 0 #000;
+            font-weight: bold;
+            font-size: 18px;
+            color: #fff;
+            z-index: 10;
+        }
+
+        .hud-item span {
+            color: #4ecca3;
+        }
+
+        /* --- LAYAR (Start, End, Quiz) --- */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 15, 25, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* --- TYPOGRAPHY & INPUTS --- */
+        h1 {
+            color: #4ecca3;
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            text-shadow: 4px 4px 0 #232931;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        p {
+            margin-bottom: 20px;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+
+        /* --- BUTTONS --- */
+        button {
+            padding: 15px 40px;
+            background: #4ecca3;
+            color: #000;
+            border: none;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 #232931;
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 #232931;
+        }
+
+        button:hover {
+            background: #66fcf1;
+        }
+
+        /* --- QUIZ SPECIFIC --- */
+        #quiz-screen {
+            background: rgba(0, 0, 0, 0.98);
+        }
+        
+        .quiz-option {
+            width: 100%;
+            max-width: 500px;
+            margin: 10px 0;
+            padding: 15px;
+            background: #232931;
+            border: 2px solid #4ecca3;
+            color: #fff;
+            text-align: left;
+            cursor: pointer;
+        }
+        
+        .quiz-option:hover {
+            background: #393e46;
+        }
+
+        /* --- MOBILE CONTROLS (Hanya muncul di layar kecil) --- */
+        #mobile-controls {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            padding: 0 20px;
+            justify-content: space-between;
+            z-index: 15;
+        }
+
+        .d-pad, .action-btn {
+            display: flex;
+            gap: 10px;
+        }
+
+        .ctrl-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(78, 204, 163, 0.3);
+            border: 2px solid #4ecca3;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+        }
+        
+        @media (max-width: 768px) {
+            #mobile-controls { display: flex; }
+            h1 { font-size: 32px; }
+            #game-container { height: 100vh; border: none; }
+        }
+
+        /* --- PIXEL ART CSS HELPERS --- */
+        .pixel-font {
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- LAYER UI HUD -->
+    <div id="ui-layer" class="hidden">
+        <div class="hud-item">Pemain: <span id="hud-name">Player</span></div>
+        <div class="hud-item">Data: <span id="hud-score">0</span> TB</div>
+        <div class="hud-item">Nyawa: <span id="hud-lives">3</span></div>
+    </div>
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="screen">
+        <h1>NEURO: DATA QUEST</h1>
+        <p>Anda adalah Agen AI. Tugas Anda mengumpulkan <strong>Training Data</strong> berkualitas untuk melatih model kecerdasan buatan. Hati-hati terhadap <strong>Bias</strong> (Merah) dan <strong>Bug</strong>!</p>
+        
+        <!-- Input Nama dan Kelas dihapus sesuai permintaan agar langsung bermain -->
+        
+        <button onclick="game.init()">MULAI TRAINING</button>
+    </div>
+
+    <!-- QUIZ SCREEN -->
+    <div id="quiz-screen" class="screen hidden">
+        <h2 style="color: #f1c40f;">VALIDASI DATA</h2>
+        <p id="quiz-question" style="font-size: 18px; font-weight: bold;">Pertanyaan muncul di sini</p>
+        <div id="quiz-options">
+            <!-- Options generated by JS -->
+        </div>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div id="game-over-screen" class="screen hidden">
+        <h1 id="go-title">PERMAINAN SELESAI!</h1>
+        <p>Hasil Training AI:</p>
+        <h2 id="go-score">Total Data: 0 TB</h2>
+        <p id="go-message">Model AI Anda belum cukup pintar.</p>
+        <button onclick="location.reload()">MAIN LAGI</button>
+    </div>
+
+    <!-- CANVAS GAME -->
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+
+    <!-- MOBILE CONTROLS -->
+    <div id="mobile-controls">
+        <div class="d-pad">
+            <div class="ctrl-btn" id="btn-left">←</div>
+            <div class="ctrl-btn" id="btn-right">→</div>
+        </div>
+        <div class="action-btn">
+            <div class="ctrl-btn" id="btn-jump">↑</div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * ENGINE GAME SEDERHANA
+ * Menggunakan HTML5 Canvas & Pure JS
+ * Topic: AI (Machine Learning, Training Data, Bias)
+ */
+
+// --- DATA SOAL AI (Informatika Fase F) ---
+const questions = [
+    {
+        q: "Apa yang dimaksud dengan 'Training Data' dalam Machine Learning?",
+        options: [
+            "Data yang digunakan untuk menguji kecepatan internet",
+            "Kumpulan data yang digunakan untuk melatih model agar mengenali pola",
+            "Data hasil prediksi yang salah",
+            "Kode program untuk membuat robot berjalan"
+        ],
+        correct: 1
+    },
+    {
+        q: "Jika data training yang digunakan mengandung prasangka (misal: lebih banyak data pria daripada wanita untuk jabatan CEO), apa yang terjadi?",
+        options: [
+            "AI akan menjadi lebih pintar",
+            "AI akan mengalami 'Algorithmic Bias'",
+            "AI akan berjalan lebih lambat",
+            "Tidak ada efek apapun"
+        ],
+        correct: 1
+    },
+    {
+        q: "Manakah contoh 'Supervised Learning'?",
+        options: [
+            "AI belajar bermain catur dengan bermain melawan dirinya sendiri",
+            "AI mengelompokkan data pelanggan tanpa label",
+            "AI diajari membedakan kucing dan anjing menggunakan foto yang sudah dilabeli",
+            "AI mencari jalan keluar dari labirin secara acak"
+        ],
+        correct: 2
+    },
+    {
+        q: "Dalam konteks AI, apa itu 'Pattern Recognition'?",
+        options: [
+            "Kemampuan mengenali pola atau keteraturan dalam data",
+            "Cara membuat pola baju",
+            "Menghapus virus dari komputer",
+            "Menghidupkan komputer secara otomatis"
+        ],
+        correct: 0
+    },
+    {
+        q: "Jika sebuah AI salah memprediksi gambar mobil sebagai truk, kemungkinan penyebabnya adalah...",
+        options: [
+            "Monitor komputer kurang cerah",
+            "Data training kurang variatif atau model kurang dilatih",
+            "Listrik tidak stabil",
+            "Mouse rusak"
+        ],
+        correct: 1
+    }
+];
+
+// --- KONFIGURASI GAME ---
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 450;
+const GRAVITY = 0.6;
+const TILE_SIZE = 40; // Ukuran grid
+const SPEED = 5; 
+const JUMP_FORCE = -13;
+
+// --- ASET VISUAL (GENERATED VIA CODE) ---
+const Assets = {
+    player: null,
+    ground: null,
+    dataGood: null,
+    dataBad: null,
+    enemy: null,
+    checkpoint: null,
+
+    createPixel: (color, w, h) => {
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, w, h);
+        return c;
+    },
+
+    init: function() {
+        // 1. Player (Robot) - 30x30
+        const pC = document.createElement('canvas');
+        pC.width = 30; pC.height = 30;
+        const pCtx = pC.getContext('2d');
+        // Head
+        pCtx.fillStyle = '#4ecca3'; // Neon Green
+        pCtx.fillRect(5, 0, 20, 15);
+        // Eyes
+        pCtx.fillStyle = '#000';
+        pCtx.fillRect(8, 5, 4, 4);
+        pCtx.fillRect(18, 5, 4, 4);
+        // Body
+        pCtx.fillStyle = '#eee';
+        pCtx.fillRect(2, 16, 26, 14);
+        this.player = pC;
+
+        // 2. Ground (Retro Grid) - 40x40
+        const gC = document.createElement('canvas');
+        gC.width = TILE_SIZE; gC.height = TILE_SIZE;
+        const gCtx = gC.getContext('2d');
+        gCtx.fillStyle = '#232931'; // Dark Grey
+        gCtx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        gCtx.strokeStyle = '#4ecca3';
+        gCtx.lineWidth = 2;
+        gCtx.strokeRect(0, 0, TILE_SIZE, TILE_SIZE); // Green Border
+        // Pixel detail
+        gCtx.fillStyle = '#393e46';
+        gCtx.fillRect(5, 5, 10, 10);
+        gCtx.fillRect(25, 25, 10, 10);
+        this.ground = gC;
+
+        // 3. Data Good (Floppy Disk Blue) - 20x20
+        this.dataGood = this.createIcon('#3498db', 'D'); // Blue
+
+        // 4. Data Bad (Floppy Disk Red - Bias) - 20x20
+        this.dataBad = this.createIcon('#e74c3c', '!'); // Red
+
+        // 5. Enemy (Bug) - 30x20
+        const eC = document.createElement('canvas');
+        eC.width = 30; eC.height = 20;
+        const eCtx = eC.getContext('2d');
+        eCtx.fillStyle = '#e74c3c'; // Red
+        eCtx.beginPath();
+        eCtx.arc(15, 10, 10, 0, Math.PI*2); // Body
+        eCtx.fill();
+        eCtx.strokeStyle = '#fff'; 
+        eCtx.lineWidth = 2; // Legs
+        eCtx.moveTo(5,10); eCtx.lineTo(0, 15);
+        eCtx.moveTo(25,10); eCtx.lineTo(30, 15);
+        eCtx.stroke();
+        eCtx.fillStyle = '#000'; // Eyes
+        eCtx.fillRect(10, 5, 3, 3);
+        eCtx.fillRect(17, 5, 3, 3);
+        this.enemy = eC;
+
+        // 6. Checkpoint (Server) - 40x60
+        const cC = document.createElement('canvas');
+        cC.width = 40; cC.height = 60;
+        const cCtx = cC.getContext('2d');
+        cCtx.fillStyle = '#95a5a6';
+        cCtx.fillRect(0, 0, 40, 60);
+        cCtx.fillStyle = '#f1c40f'; // Lights
+        cCtx.fillRect(5, 10, 30, 5);
+        cCtx.fillRect(5, 25, 30, 5);
+        cCtx.fillRect(5, 40, 30, 5);
+        this.checkpoint = cC;
+    },
+
+    createIcon: (color, char) => {
+        const c = document.createElement('canvas');
+        c.width = 24; c.height = 24;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(2, 2);
+        ctx.lineTo(16, 2);
+        ctx.lineTo(22, 8);
+        ctx.lineTo(22, 22);
+        ctx.lineTo(2, 22);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(6, 4, 12, 6); // Metal slider
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 12px Courier';
+        ctx.fillText(char, 8, 18);
+        return c;
+    }
+};
+
+// --- LOGIKA UTAMA ---
+var game = {
+    canvas: document.getElementById('gameCanvas'),
+    ctx: null,
+    state: 'START', // START, PLAY, QUIZ, GAMEOVER
+    width: CANVAS_WIDTH,
+    height: CANVAS_HEIGHT,
+    playerData: { name: '', class: '' },
+    score: 0,
+    lives: 3,
+    levelData: [],
+    cameraX: 0,
+    entities: [],
+    currentQuizIndex: 0,
+    loopId: null, // Untuk menghentikan loop lama
+
+    // Entities
+    player: {
+        x: 100, y: 100, w: 30, h: 30,
+        dx: 0, dy: 0,
+        grounded: false,
+        facingRight: true
+    },
+
+    keys: { left: false, right: false, up: false },
+
+    init: function() {
+        // PERBAIKAN: Menghapus pengambilan value input
+        
+        try {
+            if (this.loopId) cancelAnimationFrame(this.loopId);
+
+            // Set default data
+            this.playerData.name = "Player";
+            this.playerData.class = "";
+            
+            // Setup Display
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('ui-layer').classList.remove('hidden');
+            document.getElementById('hud-name').innerText = this.playerData.name;
+            // Class hud item dihapus jika tidak diperlukan, atau dibiarkan kosong
+
+            this.ctx = this.canvas.getContext('2d');
+            this.ctx.imageSmoothingEnabled = false; // Pixel art mode
+
+            Assets.init(); // Generate assets
+            this.generateLevel(); // Buat level
+            
+            this.score = 0;
+            this.lives = 3;
+            this.currentQuizIndex = 0;
+            this.updateHUD();
+
+            // Reset player physics
+            this.player.dx = 0; 
+            this.player.dy = 0;
+            this.player.grounded = false;
+
+            // FIX: Fokus ke window agar keyboard langsung terdeteksi
+            window.focus();
+
+            // Input Listeners
+            window.addEventListener('keydown', e => this.handleInput(e, true));
+            window.addEventListener('keyup', e => this.handleInput(e, false));
+            
+            // Touch Listeners
+            this.setupTouch();
+
+            this.state = 'PLAY';
+            this.loop();
+        } catch (err) {
+            console.error(err);
+            alert("Terjadi kesalahan saat memuat game. Coba refresh halaman.");
+        }
+    },
+
+    setupTouch: function() {
+        const btnLeft = document.getElementById('btn-left');
+        const btnRight = document.getElementById('btn-right');
+        const btnJump = document.getElementById('btn-jump');
+
+        const handleTouch = (key, state) => {
+            if(key === 'ArrowLeft') this.keys.left = state;
+            if(key === 'ArrowRight') this.keys.right = state;
+            if(key === 'ArrowUp') {
+                // Logic lompat touch sama dengan keyboard
+                if (state && this.player.grounded) {
+                    this.player.dy = JUMP_FORCE;
+                    this.player.grounded = false;
+                }
+                this.keys.up = state;
+            }
+        };
+
+        btnLeft.ontouchstart = (e) => { e.preventDefault(); handleTouch('ArrowLeft', true); };
+        btnLeft.ontouchend = (e) => { e.preventDefault(); handleTouch('ArrowLeft', false); };
+        
+        btnRight.ontouchstart = (e) => { e.preventDefault(); handleTouch('ArrowRight', true); };
+        btnRight.ontouchend = (e) => { e.preventDefault(); handleTouch('ArrowRight', false); };
+
+        btnJump.ontouchstart = (e) => { e.preventDefault(); handleTouch('ArrowUp', true); };
+        btnJump.ontouchend = (e) => { e.preventDefault(); handleTouch('ArrowUp', false); };
+    },
+
+    handleInput: function(e, isDown) {
+        const key = e.key.toLowerCase();
+        const code = e.code;
+        
+        // FIX: Mencegah 'key repeat' pada lompatan (tahan spasi = terbang)
+        if (code === 'ArrowUp' || code === 'Space' || key === 'w') {
+            if (isDown) {
+                if (!e.repeat && this.player.grounded) {
+                    this.player.dy = JUMP_FORCE;
+                    this.player.grounded = false;
+                }
+                this.keys.up = true;
+            } else {
+                this.keys.up = false;
+            }
+            return; // Selesai handle jump
+        }
+
+        if (code === 'ArrowLeft' || key === 'a') {
+            this.keys.left = isDown;
+        }
+        if (code === 'ArrowRight' || key === 'd') {
+            this.keys.right = isDown;
+        }
+    },
+
+    generateLevel: function() {
+        // 0: Air, 1: Ground, 2: Good Data, 3: Bad Data, 4: Enemy, 5: Checkpoint
+        const map = [
+            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+            0,0,0,0,2,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,
+            0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,0,0,0,0,3,0,0,0,1,1,1,1,0,0,0,
+            0,0,2,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,
+            0,1,1,0,0,0,1,1,1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2,0,0,
+            0,0,0,0,0,0,0,0,0,0,2,0,3,0,1,1,1,0,0,0,0,4,0,0,0,0,1,1,1,0,
+            1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,
+            
+            // Section 2
+            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+            0,0,0,0,5,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,
+            0,0,1,1,1,1,0,0,1,1,0,0,0,3,0,0,4,0,0,0,2,2,0,1,1,1,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,2,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,0,
+            1,1,1,1,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,1,1,1,1,1,
+            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+            
+            // Section 3
+            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,
+            0,0,0,0,2,0,3,0,2,0,0,0,4,0,0,2,0,0,0,0,0,0,0,1,1,1,0,0,0,0,
+            0,0,1,1,1,1,1,1,1,1,0,1,1,1,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        ];
+        
+        this.entities = [];
+        const rows = 7; 
+        const cols = map.length / rows; 
+        
+        for(let r=0; r<rows; r++) {
+            for(let c=0; c<cols; c++) {
+                const type = map[r * cols + c];
+                const x = c * TILE_SIZE;
+                const y = (CANVAS_HEIGHT - (rows * TILE_SIZE)) + (r * TILE_SIZE);
+                
+                if(type === 1) { 
+                    this.entities.push({ type: 'ground', x: x, y: y, w: TILE_SIZE, h: TILE_SIZE });
+                } else if(type === 2) { 
+                    this.entities.push({ type: 'item_good', x: x + 10, y: y + 10, w: 20, h: 20, collected: false });
+                } else if(type === 3) { 
+                    this.entities.push({ type: 'item_bad', x: x + 10, y: y + 10, w: 20, h: 20, collected: false });
+                } else if(type === 4) { 
+                    this.entities.push({ type: 'enemy', x: x, y: y + 10, w: 30, h: 20, dx: 1, minX: x-40, maxX: x+40 });
+                } else if(type === 5) { 
+                     this.entities.push({ type: 'checkpoint', x: x, y: y - 20, w: 40, h: 60, active: true });
+                }
+            }
+        }
+    },
+
+    update: function() {
+        if (this.state !== 'PLAY') return;
+
+        // Player Physics
+        if (this.keys.left) {
+            this.player.dx = -SPEED;
+            this.player.facingRight = false;
+        } else if (this.keys.right) {
+            this.player.dx = SPEED;
+            this.player.facingRight = true;
+        } else {
+            this.player.dx = 0;
+        }
+
+        this.player.dy += GRAVITY;
+        this.player.x += this.player.dx;
+        this.checkCollision('x');
+        
+        this.player.y += this.player.dy;
+        this.player.grounded = false; // Asumsi jatuh dulu
+        this.checkCollision('y');
+
+        // Level Boundaries
+        if (this.player.y > CANVAS_HEIGHT) {
+            this.takeDamage(1); 
+            this.respawn();
+        }
+
+        // Camera Follow
+        this.cameraX = this.player.x - CANVAS_WIDTH / 3;
+        if(this.cameraX < 0) this.cameraX = 0;
+
+        // Entity Logic
+        this.entities.forEach(e => {
+            if (e.type === 'enemy') {
+                e.x += e.dx;
+                if (e.x > e.maxX || e.x < e.minX) e.dx *= -1;
+                
+                // Gunakan intersect simple untuk trigger damage
+                if (this.simpleIntersect(this.player, e)) {
+                    this.takeDamage(1);
+                    this.respawn();
+                }
+            }
+            else if (e.type === 'item_good' && !e.collected) {
+                if (this.simpleIntersect(this.player, e)) {
+                    e.collected = true;
+                    this.score += 10;
+                    this.updateHUD();
+                }
+            }
+            else if (e.type === 'item_bad' && !e.collected) {
+                if (this.simpleIntersect(this.player, e)) {
+                    e.collected = true;
+                    this.score -= 5;
+                    this.updateHUD();
+                }
+            }
+            else if (e.type === 'checkpoint' && e.active) {
+                if (this.simpleIntersect(this.player, e)) {
+                    e.active = false; 
+                    this.triggerQuiz();
+                }
+            }
+        });
+    },
+
+    checkCollision: function(axis) {
+        for (let e of this.entities) {
+            if (e.type === 'ground') {
+                // Gunakan fungsi intersect dengan toleransi khusus untuk fisik
+                if (this.physicsIntersect(this.player, e, axis)) {
+                    if (axis === 'x') {
+                        if (this.player.dx > 0) this.player.x = e.x - this.player.w;
+                        if (this.player.dx < 0) this.player.x = e.x + e.w;
+                    } else {
+                        if (this.player.dy > 0) { // Jatuh
+                            this.player.y = e.y - this.player.h;
+                            this.player.dy = 0;
+                            this.player.grounded = true;
+                        } else { // Lompat kena atap
+                            this.player.y = e.y + e.h;
+                            this.player.dy = 0;
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    // Deteksi tabrakan fisik dengan toleransi agar tidak lengket di lantai
+    physicsIntersect: function(r1, r2, axis) {
+        // Toleransi: mengecilkan hitbox pemain sedikit saat mengecek tabrakan
+        // agar tidak terkena "gesekan" pixel saat di lantai
+        const padding = axis === 'x' ? 2 : 0; // Hanya kurangi tinggi saat cek X
+        
+        // Cek overlap biasa namun dengan hitbox r1 yang "dikuruskan" secara vertikal untuk cek X
+        // Ini mencegah kaki karakter menabrak lantai saat berjalan datar
+        return !(r2.x >= r1.x + r1.w || 
+                 r2.x + r2.w <= r1.x || 
+                 r2.y >= r1.y + r1.h - padding || 
+                 r2.y + r2.h <= r1.y + padding);
+    },
+
+    // Intersect standar untuk item/musuh
+    simpleIntersect: function(r1, r2) {
+        return !(r2.x >= r1.x + r1.w || 
+                 r2.x + r2.w <= r1.x || 
+                 r2.y >= r1.y + r1.h || 
+                 r2.y + r2.h <= r1.y);
+    },
+
+    takeDamage: function(amount) {
+        this.lives -= amount;
+        this.updateHUD();
+        if (this.lives <= 0) {
+            this.endGame(false);
+        }
+    },
+
+    respawn: function() {
+        this.player.y = 0;
+        this.player.dy = 0;
+        // Mundurkan sedikit, tapi jangan minus
+        this.player.x = Math.max(0, this.player.x - 100); 
+    },
+
+    triggerQuiz: function() {
+        if (this.currentQuizIndex >= questions.length) {
+            this.endGame(true); 
+            return;
+        }
+
+        this.state = 'QUIZ';
+        const qData = questions[this.currentQuizIndex];
+        
+        const qScreen = document.getElementById('quiz-screen');
+        document.getElementById('quiz-question').innerText = qData.q;
+        const optContainer = document.getElementById('quiz-options');
+        optContainer.innerHTML = '';
+
+        qData.options.forEach((opt, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'quiz-option';
+            btn.innerText = opt;
+            btn.onclick = () => this.answerQuiz(idx);
+            optContainer.appendChild(btn);
+        });
+
+        qScreen.classList.remove('hidden');
+    },
+
+    answerQuiz: function(idx) {
+        const qData = questions[this.currentQuizIndex];
+        const qScreen = document.getElementById('quiz-screen');
+        
+        if (idx === qData.correct) {
+            this.score += 50; 
+            alert("BENAR! Algoritma Anda semakin cerdas.");
+        } else {
+            this.score -= 20;
+            this.lives -= 1;
+            alert("SALAH! Model mengalami error (Loss Function meningkat).");
+            if (this.lives <= 0) {
+                this.endGame(false);
+                return;
+            }
+        }
+        
+        this.updateHUD();
+        this.currentQuizIndex++;
+        qScreen.classList.add('hidden');
+        this.state = 'PLAY';
+        
+        this.player.x += 60;
+    },
+
+    updateHUD: function() {
+        document.getElementById('hud-score').innerText = this.score;
+        document.getElementById('hud-lives').innerText = this.lives;
+    },
+
+    endGame: function(win) {
+        this.state = 'GAMEOVER';
+        const goScreen = document.getElementById('game-over-screen');
+        goScreen.classList.remove('hidden');
+        document.getElementById('ui-layer').classList.add('hidden');
+        document.getElementById('mobile-controls').style.display = 'none';
+
+        // Hanya tampilkan skor, karena input nama/kelas dihapus
+        document.getElementById('go-score').innerText = "Total Data: " + this.score + " TB";
+
+        const title = document.getElementById('go-title');
+        const msg = document.getElementById('go-message');
+
+        if (win) {
+            title.innerText = "TRAINING COMPLETE!";
+            title.style.color = "#4ecca3";
+            msg.innerText = "Selamat! Anda berhasil melatih model AI dengan data yang akurat. Akurasi model tinggi!";
+        } else {
+            title.innerText = "SYSTEM FAILURE";
+            title.style.color = "#e74c3c";
+            msg.innerText = "Training gagal. Terlalu banyak bias atau bug, atau gagal dalam validasi.";
+        }
+    },
+
+    draw: function() {
+        this.ctx.fillStyle = '#1a1a2e';
+        this.ctx.fillRect(0, 0, this.width, this.height);
+
+        this.ctx.save();
+        this.ctx.translate(-this.cameraX, 0);
+
+        this.entities.forEach(e => {
+            if (e.x + e.w > this.cameraX && e.x < this.cameraX + this.width) {
+                if (e.type === 'ground') {
+                    this.ctx.drawImage(Assets.ground, e.x, e.y);
+                } else if (e.type === 'item_good' && !e.collected) {
+                    this.ctx.drawImage(Assets.dataGood, e.x, e.y);
+                } else if (e.type === 'item_bad' && !e.collected) {
+                    this.ctx.drawImage(Assets.dataBad, e.x, e.y);
+                } else if (e.type === 'enemy') {
+                    this.ctx.drawImage(Assets.enemy, e.x, e.y);
+                } else if (e.type === 'checkpoint' && e.active) {
+                    // PERBAIKAN: Mengganti typo draw777777Image menjadi drawImage
+                    this.ctx.drawImage(Assets.checkpoint, e.x, e.y);
+                }
+            }
+        });
+
+        this.ctx.drawImage(Assets.player, this.player.x, this.player.y);
+        this.ctx.restore();
+    },
+
+    loop: function() {
+        if (this.state === 'PLAY') {
+            this.update();
+            this.draw();
+        } else if (this.state === 'QUIZ') {
+            this.draw();
+        }
+
+        if (this.state !== 'GAMEOVER') {
+            this.loopId = requestAnimationFrame(() => this.loop());
+        }
+    }
+};
+
+</script>
+</body>
+</html>

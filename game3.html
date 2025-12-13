@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk Digital Editor - Fase F</title>
+    <!-- Font Monospace Cyberpunk (fallback ke sans-serif) -->
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Utama untuk Gaya Cyberpunk */
+        :root {
+            --color-bg: #1a1a2e;
+            --color-primary: #00e0ff; /* Neon Cyan */
+            --color-secondary: #ff007f; /* Neon Magenta */
+            --color-text: #e0e0e0;
+            --color-danger: #ff5733;
+            --font-main: 'Chakra Petch', monospace;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid var(--color-primary);
+            box-shadow: 0 0 20px var(--color-primary);
+            border-radius: 12px;
+            padding: 30px;
+            box-sizing: border-box;
+            animation: pulse-border 5s infinite alternate;
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 10px var(--color-primary); border-color: var(--color-primary); }
+            100% { box-shadow: 0 0 30px var(--color-secondary), 0 0 10px var(--color-primary); border-color: var(--color-secondary); }
+        }
+
+        h1 {
+            color: var(--color-secondary);
+            text-shadow: 0 0 8px var(--color-secondary);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            color: var(--color-primary);
+            text-shadow: 0 0 5px var(--color-primary);
+            margin-top: 0;
+        }
+
+        .btn {
+            background: var(--color-secondary);
+            color: var(--color-bg);
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px var(--color-secondary);
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            background: var(--color-primary);
+            box-shadow: 0 0 15px var(--color-primary), 0 0 25px var(--color-primary);
+            color: black;
+            transform: scale(1.05);
+        }
+
+        /* LAYAR START */
+        #start-screen {
+            display: block;
+        }
+
+        /* LAYAR GAME */
+        #game-screen {
+            display: none;
+            text-align: left;
+        }
+
+        .game-ui {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px dashed var(--color-primary);
+            border-radius: 6px;
+        }
+
+        .ui-element {
+            font-size: 1rem;
+            padding: 5px 10px;
+            border-left: 3px solid var(--color-secondary);
+        }
+
+        #lives-display {
+            color: var(--color-danger);
+            text-shadow: 0 0 5px var(--color-danger);
+        }
+
+        .question-box {
+            background: #2b2b4e;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--color-secondary);
+            margin-bottom: 20px;
+            min-height: 120px;
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: #3a3a5e;
+            color: var(--color-text);
+            border: 1px solid var(--color-primary);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .option-btn:hover {
+            background: #50507a;
+            box-shadow: 0 0 5px var(--color-primary);
+        }
+
+        .option-btn.correct-feedback {
+            background: #116611; /* Hijau */
+            box-shadow: 0 0 15px #00ff00;
+            pointer-events: none;
+        }
+
+        .option-btn.wrong-feedback {
+            background: #661111; /* Merah */
+            box-shadow: 0 0 15px #ff0000;
+            pointer-events: none;
+        }
+
+        /* Representasi Visual Soal (Hanya CSS/DIV) */
+        .visual-representation {
+            height: 100px;
+            width: 100%;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid var(--color-text);
+            background: #00001f;
+        }
+        
+        /* Gaya untuk Layer/Visual */
+        .visual-layer {
+            height: 80px;
+            width: 80px;
+            border: 2px solid var(--color-primary);
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: white;
+            box-shadow: 0 0 5px var(--color-secondary);
+            transition: transform 0.3s;
+        }
+
+        /* LAYAR END */
+        #end-screen {
+            display: none;
+        }
+
+        #final-score {
+            font-size: 3rem;
+            color: var(--color-primary);
+            text-shadow: 0 0 10px var(--color-primary);
+            margin: 15px 0;
+        }
+
+        /* Responsif */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .game-ui {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .options-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- ======================= LAYAR AWAL ======================= -->
+        <div id="start-screen">
+            <h1>:: EDITOR DIGITAL CYBERPUNK ::</h1>
+            <h2>Dasar Editing</h2>
+            
+            <!-- INPUT NAMA DAN KELAS DIHAPUS -->
+            
+            <button class="btn" onclick="startGame()">[ START SIMULASI ]</button>
+        </div>
+
+        <!-- ======================= LAYAR GAMEPLAY ======================= -->
+        <div id="game-screen">
+            <div class="game-ui">
+                <div class="ui-element">USER_ID: <span id="ui-name"></span></div>
+                <div class="ui-element">MODE: <span id="ui-class"></span></div>
+                <div class="ui-element">SCORE: <span id="score-display">0</span></div>
+                <div class="ui-element" id="lives-display">HEALTH: <span id="lives-count">3</span></div>
+            </div>
+
+            <div class="question-box">
+                <p>TASK_ID: <span id="question-index"></span>/7</p>
+                <h3 id="question-text">Memuat pertanyaan...</h3>
+
+                <!-- Area untuk visualisasi soal (dibuat murni dengan div/css) -->
+                <div id="visual-area" class="visual-representation">
+                    <!-- Visualisasi akan di-inject di sini oleh JavaScript -->
+                </div>
+            </div>
+
+            <div id="options-container" class="options-container">
+                <!-- Pilihan Jawaban (Tombol) akan di-inject di sini -->
+            </div>
+            
+            <div id="feedback-message" style="margin-top: 20px; min-height: 25px; color: var(--color-primary); font-weight: bold; text-shadow: 0 0 5px var(--color-primary);"></div>
+        </div>
+
+        <!-- ======================= LAYAR AKHIR ======================= -->
+        <div id="end-screen">
+            <h1>:: SIMULASI SELESAI ::</h1>
+            <h2>LAPORAN KINERJA</h2>
+            <!-- Informasi Nama/Kelas di layar akhir bisa kita ganti dengan pesan umum -->
+            <p>STATUS: <span id="final-status">SIMULATION COMPLETE</span></p>
+            <div id="final-score">0</div>
+            
+            <button class="btn" onclick="window.location.reload()">[ RESTART SISTEM ]</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Data Game dan Konfigurasi
+        const questions = [
+            {
+                id: 1,
+                text: "Anda memiliki foto pemandangan di mana horizon terlihat miring 5 derajat ke kanan. Tindakan editing dasar apa yang paling tepat dilakukan pertama kali untuk memperbaikinya?",
+                visual: "Rotasi",
+                options: ["A. Masking untuk menyeimbangkan warna", "B. Cropping dan Rotasi gambar", "C. Menambah Exposure hingga 50%", "D. Mengganti Layer ke mode 'Overlay'"],
+                correctIndex: 1, // B
+                points: 10
+            },
+            {
+                id: 2,
+                text: "Foto wajah terlihat terlalu gelap, detail bayangan sulit dilihat. Pengaturan tonal apa yang harus Anda sesuaikan untuk mencerahkan bayangan tanpa memengaruhi highlight (area terang) secara berlebihan?",
+                visual: "Bayangan",
+                options: ["A. Saturasi", "B. Contrast (Kontras)", "C. Shadows (Bayangan)", "D. White Balance"],
+                correctIndex: 2, // C
+                points: 10
+            },
+            {
+                id: 3,
+                text: "Anda ingin menerapkan filter warna-warni hanya pada objek robot di latar depan, sementara latar belakang tetap hitam-putih. Teknik non-destruktif apa yang Anda perlukan?",
+                visual: "Masking",
+                options: ["A. Exposure Global", "B. Layer Masking", "C. Duplikasi Channel", "D. Flatten Image"],
+                correctIndex: 1, // B
+                points: 10
+            },
+            {
+                id: 4,
+                text: "Anda menyusun gambar Cyberpunk: Layer 1: Latar Belakang Kota (Bawah). Layer 2: Mobil Neon (Tengah). Layer 3: Efek Glitch (Atas). Untuk melihat mobil DENGAN efek glitch, urutan yang benar dari BAWAH ke ATAS adalah:",
+                visual: "Layering",
+                options: ["A. Glitch, Mobil, Kota", "B. Kota, Mobil, Glitch", "C. Mobil, Kota, Glitch", "D. Urutan tidak penting"],
+                correctIndex: 1, // B
+                points: 10
+            },
+            {
+                id: 5,
+                text: "Apa yang terjadi pada file setelah Anda melakukan 'Flatten Image' (Ratakan Gambar) pada semua layer dalam sebuah dokumen editing?",
+                visual: "Flatten",
+                options: ["A. Ukuran file membesar 2x lipat", "B. Semua elemen layer digabungkan ke satu layer utama, menghilangkan kemampuan edit terpisah", "C. Layer baru otomatis dibuat dengan efek 'Clone Stamp'", "D. Kualitas gambar meningkat tajam tanpa konsekuensi"],
+                correctIndex: 1, // B
+                points: 10
+            },
+            {
+                id: 6,
+                text: "Anda memotong (Crop) foto dari rasio 16:9 menjadi 4:3. Apa konsekuensi utama dari tindakan ini pada komposisi?",
+                visual: "Crop",
+                options: ["A. Resolusi gambar meningkat 100%", "B. Aspek rasio berubah dan sebagian detail visual terpotong permanen", "C. Warna menjadi lebih jenuh (saturated)", "D. Kebutuhan exposure berkurang"],
+                correctIndex: 1, // B
+                points: 10
+            },
+            {
+                id: 7,
+                text: "Ketika nilai 'Exposure' pada foto dinaikkan terlalu tinggi (overexposed), bagian gambar manakah yang paling mungkin kehilangan detail, menjadi putih polos (disebut 'clipping')?",
+                visual: "Exposure",
+                options: ["A. Shadows (Bayangan)", "B. Highlights (Area Terang)", "C. Midtones (Warna Tengah)", "D. Blacks (Hitam pekat)"],
+                correctIndex: 1, // B
+                points: 10
+            }
+        ];
+
+        // Variabel Status Global
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let lives = 3;
+        let userName = '';
+        let userClass = '';
+        let isProcessing = false; // Mencegah double click
+        
+        // Konstanta Warna dari CSS
+        const CSS_VAR_PRIMARY = 'var(--color-primary)';
+        const CSS_VAR_DANGER = 'var(--color-danger)';
+
+
+        // Peta visualisasi sederhana
+        const visualMap = {
+            "Rotasi": `<div style="background: linear-gradient(45deg, var(--color-primary), var(--color-secondary)); width: 90px; height: 90px; transform: rotate(-5deg); border: 2px solid white;"></div>`,
+            "Bayangan": `<div style="background: #00001f; border-radius: 50%; width: 80px; height: 80px; box-shadow: 0 0 15px 5px #ff007f inset; margin-right: 15px;"></div><div style="background: #00001f; border-radius: 50%; width: 80px; height: 80px; box-shadow: 0 0 15px 5px #00e0ff inset;"></div>`,
+            "Masking": `<div style="position: relative; width: 150px; height: 80px; background: #333;"><div style="position: absolute; top: 0; left: 0; width: 75px; height: 80px; background: #ff007f; clip-path: polygon(0 0, 100% 0, 75% 100%, 0% 100%);"></div><div style="position: absolute; top: 0; right: 0; width: 75px; height: 80px; background: #00e0ff; clip-path: polygon(100% 0, 0 0, 25% 100%, 100% 100%);"></div></div>`,
+            "Layering": `<div class="visual-layer" style="background: rgba(255, 0, 127, 0.7); z-index: 3; transform: translate(15px, 0);">Layer EFEK</div><div class="visual-layer" style="background: rgba(0, 224, 255, 0.7); z-index: 2; transform: translate(-15px, 0);">Layer OBJEK</div><div class="visual-layer" style="background: rgba(255, 255, 255, 0.2); z-index: 1;">Layer BAWAH</div>`,
+            "Flatten": `<div style="background: linear-gradient(to right, #00e0ff, #ff007f); width: 100px; height: 80px; border: 2px solid white;">Layer 1 & 2</div>`,
+            "Crop": `<div style="width: 120px; height: 60px; border: 2px dashed var(--color-secondary); position: relative;"><div style="width: 80px; height: 40px; background: #333; position: absolute; top: 10px; left: 20px; border: 2px solid var(--color-primary); display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">AREA BARU</div></div>`,
+            "Exposure": `<div style="width: 100px; height: 80px; background: #ffffe0; border: 2px solid var(--color-primary); box-shadow: 0 0 15px 5px #ffffe0; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold;">OVEREXPOSED</div>`,
+        };
+
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+
+        const scoreDisplay = document.getElementById('score-display');
+        const livesCount = document.getElementById('lives-count');
+        const questionText = document.getElementById('question-text');
+        const questionIndex = document.getElementById('question-index');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const visualArea = document.getElementById('visual-area');
+
+        /**
+         * Menginisialisasi permainan.
+         * Versi Modifikasi: Tidak mengambil input nama/kelas. Langsung set default.
+         */
+        function startGame() {
+            // Set nama default otomatis
+            userName = "NETRUNNER_01"; 
+            userClass = "TRAINING_MODE";
+
+            // Atur UI Info
+            document.getElementById('ui-name').textContent = userName;
+            document.getElementById('ui-class').textContent = userClass;
+
+            // Transisi Layar
+            startScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+
+            currentQuestionIndex = 0;
+            score = 0;
+            lives = 3;
+            updateUI();
+            loadQuestion();
+        }
+
+        /**
+         * Memperbarui tampilan skor dan nyawa.
+         */
+        function updateUI() {
+            scoreDisplay.textContent = score;
+            livesCount.textContent = lives;
+            livesCount.style.color = lives <= 1 ? CSS_VAR_DANGER : CSS_VAR_PRIMARY;
+        }
+
+        /**
+         * Memuat pertanyaan saat ini ke layar.
+         */
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                endGame(true); // Menang
+                return;
+            }
+
+            const q = questions[currentQuestionIndex];
+            optionsContainer.innerHTML = ''; // Kosongkan pilihan lama
+            feedbackMessage.textContent = '';
+            isProcessing = false; // Aktifkan klik
+
+            questionIndex.textContent = q.id;
+            questionText.textContent = q.text;
+            
+            // Tampilkan visualisasi
+            visualArea.innerHTML = visualMap[q.visual];
+
+            // Tampilkan pilihan
+            q.options.forEach((optionText, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = optionText;
+                btn.onclick = () => checkAnswer(index, q.correctIndex, q.points, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        /**
+         * Memeriksa jawaban yang dipilih.
+         */
+        function checkAnswer(selectedIndex, correctIndex, points, clickedButton) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            // Nonaktifkan semua tombol setelah memilih
+            Array.from(optionsContainer.children).forEach(btn => btn.style.pointerEvents = 'none');
+
+            if (selectedIndex === correctIndex) {
+                // Jawaban Benar
+                score += points;
+                feedbackMessage.textContent = "[ KODE 01: JAWABAN TEPAT ] Sistem mengakui teknik editing Anda.";
+                clickedButton.classList.add('correct-feedback');
+
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    updateUI();
+                    loadQuestion();
+                }, 1500);
+
+            } else {
+                // Jawaban Salah
+                lives--;
+                feedbackMessage.textContent = "[ KODE 02: KESALAHAN DATA ] Teknik yang dipilih tidak optimal. -1 HEALTH.";
+                clickedButton.classList.add('wrong-feedback');
+                
+                // Beri penekanan pada jawaban yang benar
+                Array.from(optionsContainer.children).forEach((btn, index) => {
+                    if (index === correctIndex) {
+                        btn.style.boxShadow = '0 0 10px #00ff00';
+                    }
+                });
+
+                updateUI();
+
+                if (lives <= 0) {
+                    setTimeout(() => endGame(false), 2000); // Kalah
+                } else {
+                    setTimeout(() => {
+                        currentQuestionIndex++;
+                        loadQuestion();
+                    }, 2000);
+                }
+            }
+        }
+
+        /**
+         * Mengakhiri permainan dan menampilkan layar akhir.
+         */
+        function endGame(isWin) {
+            gameScreen.style.display = 'none';
+            endScreen.style.display = 'block';
+
+            // Tidak ada input nama di awal, jadi tampilkan status saja
+            document.getElementById('final-status').textContent = isWin ? "ACCESS GRANTED" : "ACCESS DENIED";
+            document.getElementById('final-score').textContent = score + " PT";
+
+            if (isWin) {
+                document.querySelector('#end-screen h1').textContent = ":: MISI LENGKAP - DATA AMAN ::";
+            } else {
+                document.querySelector('#end-screen h1').textContent = ":: PERMAINAN SELESAI - RESTART ::";
+                document.querySelector('#end-screen h2').textContent = "HEALTH EXHAUSTED";
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', updateUI);
+
+    </script>
+
+</body>
+</html>

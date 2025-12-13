@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithm Architect - Mini Game</title>
+    <style>
+        :root {
+            --bg-dark: #050510;
+            --bg-panel: #0f0f1f;
+            --primary: #00f3ff;
+            --secondary: #bc13fe;
+            --success: #00ff9d;
+            --danger: #ff0055;
+            --text-main: #e0e0e0;
+            --font-mono: 'Courier New', Courier, monospace;
+            --font-main: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        * { box-sizing: border-box; user-select: none; }
+        
+        body {
+            margin: 0; padding: 20px;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* --- UI COMPONENTS --- */
+        .game-container {
+            width: 100%; max-width: 900px; height: 600px;
+            background: var(--bg-panel); border: 2px solid var(--primary);
+            display: flex; flex-direction: column;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
+            position: relative; overflow: hidden;
+        }
+
+        .hud {
+            padding: 15px 20px; border-bottom: 1px solid var(--primary);
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .game-area {
+            flex: 1; padding: 20px; position: relative;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden; /* Ensure content stays within area */
+        }
+
+        .btn {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--primary); color: var(--primary);
+            padding: 10px 20px; cursor: pointer; font-weight: bold;
+            transition: 0.3s; text-transform: uppercase;
+        }
+        .btn:hover { background: var(--primary); color: #000; }
+        .btn-secondary { border-color: var(--secondary); color: var(--secondary); }
+        .btn-secondary:hover { background: var(--secondary); color: #000; }
+
+        .hidden { display: none !important; }
+
+        /* --- BLOCK CODING STYLES --- */
+        .block-layout { display: flex; width: 100%; height: 100%; gap: 15px; }
+        
+        .grid-canvas { 
+            flex: 2; background: #111; 
+            display: grid; grid-template-columns: repeat(3, 1fr); 
+            gap: 2px; border: 2px solid #333;
+        }
+        
+        .grid-cell { 
+            background: #222; display: flex; justify-content: center; align-items: center; 
+            font-size: 2.5rem; position: relative; 
+        }
+        .grid-cell.wall { background: #522; box-shadow: inset 0 0 20px #500; }
+        .grid-cell.goal { background: rgba(0, 255, 0, 0.1); border: 2px dashed #0f0; }
+
+        .bot { 
+            width: 80%; height: 80%; display: flex; justify-content: center; align-items: center;
+            transition: transform 0.4s ease-in-out; z-index: 10;
+        }
+
+        .command-panel { 
+            flex: 1; background: #000; border: 1px solid #444; 
+            display: flex; flex-direction: column; padding: 10px;
+            /* FIX: Ensure panel respects parent height and handles overflow */
+            min-height: 0;
+            overflow: hidden; 
+        }
+        
+        .cmd-list { 
+            flex: 1; border: 1px inset #333; margin: 10px 0; padding: 10px; 
+            overflow-y: auto; font-family: var(--font-mono); font-size: 0.9rem;
+            background: #0a0a0a; color: #0f0;
+            /* FIX: Allow shrinking */
+            min-height: 0;
+        }
+
+        .cmd-btn {
+            background: #222; border: 1px solid #555; color: white;
+            padding: 8px; margin-bottom: 5px; cursor: pointer; text-align: left;
+            font-family: var(--font-mono);
+        }
+        .cmd-btn:hover { border-color: var(--primary); background: #333; }
+
+        /* --- MODAL STYLES --- */
+        .modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center;
+        }
+        .modal h2 { color: var(--primary); font-size: 2rem; margin-bottom: 10px; }
+        .modal p { max-width: 600px; line-height: 1.6; margin-bottom: 30px; color: #ccc; }
+        .concept-badge {
+            background: var(--secondary); color: white; padding: 4px 12px;
+            border-radius: 4px; font-size: 0.8rem; margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1 style="color:var(--primary); margin-bottom: 10px;">ALGORITHM ARCHITECT</h1>
+
+    <div class="game-container">
+        <!-- HUD -->
+        <div class="hud">
+            <div>
+                <span id="level-display" style="font-weight:bold; color:var(--text-main)">LEVEL 1</span>
+                <span style="margin: 0 10px; color:#555">|</span>
+                <span id="level-title" style="color:var(--primary)">Sequence</span>
+            </div>
+            <div style="font-family: var(--font-mono)">
+                SCORE: <span id="score-display" style="color:var(--success)">0</span>
+            </div>
+        </div>
+
+        <!-- GAMEPLAY AREA -->
+        <div id="game-area" class="game-area"></div>
+
+        <!-- BRIEFING MODAL -->
+        <div id="modal-brief" class="modal">
+            <h2 id="brief-title">LEVEL 1</h2>
+            <span id="brief-concept" class="concept-badge">CONCEPT</span>
+            <p id="brief-desc">Deskripsi misi disini.</p>
+            <button class="btn" onclick="Game.start()">MULAI MISI</button>
+        </div>
+
+        <!-- RESULT MODAL -->
+        <div id="modal-result" class="modal hidden">
+            <h2 style="color:var(--success)">LEVEL COMPLETED</h2>
+            <div style="font-size:3rem; color:gold; margin:10px;">★★★</div>
+            <p>Algoritma tereksekusi dengan sempurna.</p>
+            <button class="btn" onclick="Game.nextLevel()">LEVEL SELANJUTNYA</button>
+        </div>
+    </div>
+
+<script>
+    // --- DATABASE LEVEL (Algorithm Only) ---
+    const LEVELS = [
+        { type: "block", title: "Gerakan Dasar", concept: "Sequence", desc: "Gerakkan robot (🤖) ke bendera (🏁). Robot menghadap ke Kanan secara default.", map: [0,0,0,1,0,2,0,0,0], startDir: 1 },
+        { type: "block", title: "Belok & Maju", concept: "Sequence", desc: "Gunakan perintah 'BELOK' untuk mengubah arah hadap robot agar sampai ke tujuan.", map: [0,0,2,0,0,0,1,0,0], startDir: 1 },
+        { type: "block", title: "Hindari Tembok", concept: "Logic", desc: "Kotak merah adalah tembok. Jangan sampai menabraknya!", map: [1,0,8,0,0,0,8,0,2], startDir: 1 },
+        { type: "block", title: "Manuver Memutar", concept: "Spatial Logic", desc: "Jalan lurus tertutup! Cari jalan memutar untuk mencapai bendera.", map: [1,0,0,8,8,0,2,0,0], startDir: 1 },
+        { type: "block", title: "Looping (Pengulangan)", concept: "Iteration", desc: "Gunakan perintah ULANG untuk menghemat baris kode pada jalan lurus.", map: [1,0,0,0,0,2,0,0,0], startDir: 1, loopAllowed: true },
+        { type: "quiz", title: "Konsep While", concept: "Iteration", desc: "Loop 'while' akan terus berjalan selama kondisinya bernilai...", q: "Kondisi loop while?", a: "True", opts: ["True", "False", "Null", "Undefined"] },
+        { type: "sort", title: "Bubble Sort", concept: "Sorting", desc: "Urutkan angka dari KECIL ke BESAR dengan cara menukar (swap) elemen bersebelahan.", data: [5, 1, 4, 2, 8] },
+        { type: "quiz", title: "Fungsi", concept: "Abstraction", desc: "Blok kode yang diberi nama dan dapat digunakan kembali disebut...", q: "Definisi modularitas?", a: "Function", opts: ["Variable", "Function", "Loop", "Array"] },
+        { type: "sort", title: "Selection Sort", concept: "Sorting", desc: "Pilih angka terkecil dan letakkan di posisi awal.", data: [9, 3, 7, 1, 5] },
+        { type: "quiz", title: "Binary Search", concept: "Searching", desc: "Binary search membagi data menjadi dua. Syarat utamanya adalah data harus...", q: "Syarat Binary Search?", a: "Terurut", opts: ["Acak", "Terurut", "Duplikat", "String"] }
+    ];
+
+    // --- GAME ENGINE ---
+    const Game = {
+        levelIdx: 0,
+        score: 0,
+        interval: null,
+
+        init() {
+            this.setupLevel(0);
+        },
+
+        setupLevel(idx) {
+            this.levelIdx = idx;
+            const data = LEVELS[idx];
+            
+            // UI Update
+            document.getElementById('level-display').innerText = `LEVEL ${idx + 1}`;
+            document.getElementById('level-title').innerText = data.title;
+            
+            // Modal Update
+            document.getElementById('brief-title').innerText = data.title;
+            document.getElementById('brief-concept').innerText = data.concept;
+            document.getElementById('brief-desc').innerText = data.desc;
+            
+            // Show Briefing
+            document.getElementById('modal-result').classList.add('hidden');
+            document.getElementById('modal-brief').classList.remove('hidden');
+        },
+
+        start() {
+            document.getElementById('modal-brief').classList.add('hidden');
+            const data = LEVELS[this.levelIdx];
+            const area = document.getElementById('game-area');
+            area.innerHTML = ''; // Clear area
+
+            // Route to Engine
+            if(data.type === 'block') Engines.block(area, data);
+            else if(data.type === 'quiz') Engines.quiz(area, data);
+            else if(data.type === 'sort') Engines.sort(area, data);
+        },
+
+        win(points) {
+            this.score += points;
+            document.getElementById('score-display').innerText = this.score;
+            if(this.interval) clearInterval(this.interval);
+            
+            setTimeout(() => {
+                document.getElementById('modal-result').classList.remove('hidden');
+            }, 500);
+        },
+
+        lose(msg) {
+            if(this.interval) clearInterval(this.interval);
+            alert("GAGAL: " + msg);
+            this.start(); // Restart level immediately
+        },
+
+        nextLevel() {
+            if (this.levelIdx < LEVELS.length - 1) {
+                this.setupLevel(this.levelIdx + 1);
+            } else {
+                alert("SELAMAT! Anda telah menamatkan Algorithm Architect!");
+                location.reload();
+            }
+        }
+    };
+
+    // --- LOGIC ENGINES ---
+    const Engines = {
+        // 1. ENGINE BLOCK (Grid & Robot)
+        block(el, data) {
+            el.innerHTML = `
+                <div class="block-layout">
+                    <div class="grid-canvas" id="grid"></div>
+                    <div class="command-panel">
+                        <div style="color:var(--primary); font-weight:bold; margin-bottom:10px;">PERINTAH</div>
+                        <button class="cmd-btn" onclick="Engines.addCmd('FORWARD')">⬆ FORWARD</button>
+                        <button class="cmd-btn" onclick="Engines.addCmd('TURN LEFT')">⬅ TURN LEFT</button>
+                        <button class="cmd-btn" onclick="Engines.addCmd('TURN RIGHT')">➡ TURN RIGHT</button>
+                        ${data.loopAllowed ? '<button class="cmd-btn" onclick="Engines.addCmd(\'REPEAT 3x\')">🔄 REPEAT 3x</button>' : ''}
+                        
+                        <div style="margin-top:10px; border-top:1px solid #333; padding-top:5px; color:#888; font-size:0.8rem;">PROGRAM:</div>
+                        <div class="cmd-list" id="cmd-list"></div>
+                        
+                        <button class="btn" style="margin-top:10px;" onclick="Engines.runBot()">JALANKAN ▶</button>
+                        <button class="btn btn-secondary" style="margin-top:5px; padding:5px;" onclick="Engines.resetBot()">RESET ↺</button>
+                    </div>
+                </div>
+            `;
+
+            this.cmds = [];
+            this.botPos = data.map.indexOf(1);
+            this.botDir = data.startDir || 1; // 0:Up, 1:Right, 2:Down, 3:Left
+            this.map = data.map;
+            this.renderGrid();
+        },
+
+        addCmd(cmd) {
+            if (cmd === 'REPEAT 3x') {
+                this.cmds.push('FORWARD', 'FORWARD', 'FORWARD');
+            } else {
+                this.cmds.push(cmd);
+            }
+            this.renderCmdList();
+        },
+
+        renderCmdList() {
+            const list = document.getElementById('cmd-list');
+            list.innerHTML = this.cmds.map((c, i) => `<div>${i+1}. ${c}</div>`).join('');
+            list.scrollTop = list.scrollHeight;
+        },
+
+        renderGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            this.map.forEach((cell, i) => {
+                const div = document.createElement('div');
+                div.className = 'grid-cell ' + (cell === 8 ? 'wall' : (cell === 2 ? 'goal' : ''));
+                
+                if (i === this.botPos) {
+                    const rotation = [0, 90, 180, -90][this.botDir];
+                    div.innerHTML = `<div class="bot" style="transform: rotate(${rotation}deg)">🤖</div>`;
+                } else if (cell === 2) {
+                    div.innerHTML = '🏁';
+                }
+                grid.appendChild(div);
+            });
+        },
+
+        resetBot() {
+            this.cmds = [];
+            this.botPos = LEVELS[Game.levelIdx].map.indexOf(1);
+            this.botDir = LEVELS[Game.levelIdx].startDir || 1;
+            this.renderCmdList();
+            this.renderGrid();
+        },
+
+        runBot() {
+            if (this.cmds.length === 0) return alert("Program masih kosong!");
+            
+            let step = 0;
+            Game.interval = setInterval(() => {
+                if (step >= this.cmds.length) {
+                    clearInterval(Game.interval);
+                    if (this.map[this.botPos] === 2) Game.win(100);
+                    else Game.lose("Robot tidak sampai di tujuan.");
+                    return;
+                }
+
+                const cmd = this.cmds[step];
+                
+                if (cmd === 'TURN LEFT') this.botDir = (this.botDir + 3) % 4;
+                else if (cmd === 'TURN RIGHT') this.botDir = (this.botDir + 1) % 4;
+                else if (cmd === 'FORWARD') {
+                    // Kalkulasi posisi baru berdasarkan arah
+                    const row = Math.floor(this.botPos / 3);
+                    const col = this.botPos % 3;
+                    let nextPos = this.botPos;
+
+                    if (this.botDir === 0 && row > 0) nextPos -= 3;      // Up
+                    if (this.botDir === 1 && col < 2) nextPos += 1;      // Right
+                    if (this.botDir === 2 && row < 2) nextPos += 3;      // Down
+                    if (this.botDir === 3 && col > 0) nextPos -= 1;      // Left
+
+                    // Cek Tabrakan
+                    if (this.map[nextPos] === 8) {
+                        clearInterval(Game.interval);
+                        Game.lose("Robot menabrak tembok!");
+                        return;
+                    }
+                    this.botPos = nextPos;
+                }
+                
+                this.renderGrid();
+                step++;
+            }, 600);
+        },
+
+        // 2. ENGINE QUIZ
+        quiz(el, data) {
+            el.innerHTML = `
+                <div style="text-align:center; max-width:600px;">
+                    <h2 style="color:var(--primary); margin-bottom:20px;">${data.q}</h2>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                        ${data.opts.map(opt => `
+                            <button class="btn" onclick="Engines.checkAnswer('${opt}', '${data.a}')">${opt}</button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        },
+
+        checkAnswer(ans, correct) {
+            if (ans === correct) Game.win(100);
+            else Game.lose("Jawaban Salah!");
+        },
+
+        // 3. ENGINE SORTING
+        sort(el, data) {
+            this.sortData = [...data.data];
+            this.renderSort(el);
+            this.selectedIdx = null;
+        },
+
+        renderSort(el) {
+            const html = `
+                <div style="display:flex; flex-direction:column; align-items:center; gap:20px;">
+                    <div style="display:flex; gap:10px; align-items:flex-end; height:200px; padding:20px;">
+                        ${this.sortData.map((val, i) => `
+                            <div onclick="Engines.swapItem(${i})" style="
+                                width:60px; height:${val * 20}px;
+                                background: ${this.selectedIdx === i ? 'white' : 'var(--primary)'};
+                                color: black; font-weight:bold; font-size:1.2rem;
+                                display:flex; justify-content:center; align-items:center;
+                                cursor:pointer; border: 2px solid #fff; transition:0.2s;
+                            ">${val}</div>
+                        `).join('')}
+                    </div>
+                    <p style="color:#888">Klik dua balok untuk menukar posisinya agar berurutan (Kecil -> Besar)</p>
+                    <button class="btn" onclick="Engines.checkSort()">CEK URUTAN</button>
+                </div>
+            `;
+            el.innerHTML = html;
+        },
+
+        swapItem(idx) {
+            if (this.selectedIdx === null) {
+                this.selectedIdx = idx;
+            } else {
+                // Swap
+                const temp = this.sortData[this.selectedIdx];
+                this.sortData[this.selectedIdx] = this.sortData[idx];
+                this.sortData[idx] = temp;
+                this.selectedIdx = null;
+            }
+            this.renderSort(document.getElementById('game-area'));
+        },
+
+        checkSort() {
+            const sorted = [...this.sortData].sort((a, b) => a - b);
+            if (JSON.stringify(this.sortData) === JSON.stringify(sorted)) {
+                Game.win(100);
+            } else {
+                alert("Urutan masih salah!");
+            }
+        }
+    };
+
+    // START GAME
+    Game.init();
+
+</script>
+</body>
+</html>

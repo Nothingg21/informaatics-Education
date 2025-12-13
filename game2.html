@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoArchitect: Logic Core</title>
+    <style>
+        :root {
+            --bg-dark: #1a1c23;
+            --bg-panel: #262933;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-deep: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            --realistic-gradient: linear-gradient(145deg, #2b2f3a, #21242c);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none; /* Mencegah seleksi teks agar terasa seperti app native */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Latar belakang grid teknis */
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* --- UI COMPONENTS --- */
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        /* Panel Container dengan efek Realistis */
+        .panel {
+            background: var(--realistic-gradient);
+            border: var(--glass-border);
+            border-radius: 12px;
+            box-shadow: var(--shadow-deep);
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+            text-align: center; /* Center content for start screen */
+        }
+
+        /* Efek Metalik pada Header */
+        h1, h2 {
+            margin: 0 0 1.5rem 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(to bottom, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        /* Tombol Realistis (Neumorphism/3D) */
+        .btn {
+            background: linear-gradient(180deg, #3b82f6, #2563eb);
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 1px solid rgba(0,0,0,0.3);
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 1rem;
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            background: linear-gradient(180deg, #2563eb, #1d4ed8);
+        }
+
+        .btn-restart {
+            background: linear-gradient(180deg, #10b981, #059669);
+            margin-top: 1rem;
+        }
+
+        /* --- GAMEPLAY SCREEN UI --- */
+
+        #game-ui {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-rows: 60px 1fr 80px;
+            max-width: 1200px;
+        }
+
+        .top-bar {
+            background: #262933;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .stat-box {
+            display: flex;
+            gap: 1.5rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            color: var(--accent-blue);
+        }
+
+        .life-indicator {
+            display: flex;
+            gap: 5px;
+        }
+
+        .heart {
+            width: 15px;
+            height: 15px;
+            background-color: var(--accent-red);
+            border-radius: 50%;
+            box-shadow: 0 0 5px var(--accent-red);
+        }
+
+        .heart.lost {
+            background-color: #444;
+            box-shadow: none;
+        }
+
+        .main-workspace {
+            display: flex;
+            padding: 1rem;
+            gap: 1rem;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Area Masalah (Problem Description) */
+        .task-panel {
+            flex: 1;
+            background: rgba(30, 32, 40, 0.8);
+            border-radius: 8px;
+            border: 1px solid #333;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .task-title {
+            color: var(--accent-blue);
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .task-desc {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #ccc;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Area Membangun (Build Area) */
+        .build-area {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .drop-zone {
+            flex: 2;
+            background: #121418;
+            border: 2px dashed #444;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+            overflow-y: auto;
+            align-items: center;
+            /* Efek inset */
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .drop-zone::before {
+            content: "Area Kompilasi (Klik blok untuk menambah/menghapus)";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #333;
+            font-weight: bold;
+            pointer-events: none;
+            text-align: center;
+        }
+
+        .drop-zone.has-items::before {
+            display: none;
+        }
+
+        .source-zone {
+            flex: 1;
+            background: #1e2028;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-content: flex-start;
+            border-top: 2px solid var(--accent-blue);
+        }
+
+        /* Blok Kode/Algoritma */
+        .code-block {
+            background: linear-gradient(to bottom, #2d3342, #242833);
+            border: 1px solid #475569;
+            color: #e2e8f0;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .code-block:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .code-block::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            margin-right: 10px;
+        }
+
+        /* Indikator urutan di Drop Zone */
+        .drop-zone .code-block {
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .drop-zone .code-block::after {
+            content: '▼';
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #444;
+            font-size: 10px;
+        }
+        
+        .drop-zone .code-block:last-child::after {
+            display: none;
+        }
+
+        .controls {
+            padding: 1rem;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            background: #262933;
+            border-top: 1px solid #333;
+        }
+
+        .btn-compile {
+            background: linear-gradient(180deg, #d97706, #b45309);
+            width: 150px;
+            font-size: 1rem;
+            padding: 12px 30px;
+        }
+        
+        .btn-compile:hover {
+             background: linear-gradient(180deg, #f59e0b, #d97706);
+        }
+
+        /* --- END SCREEN --- */
+        .result-card {
+            text-align: center;
+        }
+        
+        .score-display {
+            font-size: 4rem;
+            font-weight: 800;
+            margin: 1rem 0;
+            color: var(--accent-blue);
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .final-stats {
+            background: rgba(0,0,0,0.2);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            text-align: left;
+            font-family: 'Consolas', monospace;
+            border: 1px solid #333;
+        }
+
+        /* Animasi Feedback */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.3s ease-in-out;
+            border-color: var(--accent-red) !important;
+        }
+
+        .flash-green {
+            animation: flashSuccess 0.5s ease-out;
+        }
+
+        @keyframes flashSuccess {
+            0% { background-color: rgba(16, 185, 129, 0.5); }
+            100% { background-color: transparent; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- LAYAR AWAL (TANPA INPUT NAMA/NIM) -->
+    <div id="start-screen" class="screen active">
+        <div class="panel">
+            <h1>AlgoArchitect</h1>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 3rem;">Logic Construction Interface </p>
+            
+            <div style="text-align: center;">
+                <button onclick="game.startGame()" class="btn">MULAI SIMULASI</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYAR GAMEPLAY -->
+    <div id="game-screen" class="screen">
+        <div id="game-ui">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="stat-box">
+                    <span id="display-name">OPERATOR: -</span>
+                    <span id="display-class">UNIT: -</span>
+                </div>
+                <div style="display: flex; gap: 2rem; align-items: center;">
+                    <div class="stat-box">
+                        SCORE: <span id="score-val" style="color: white; font-weight: bold;">0</span>
+                    </div>
+                    <div class="life-indicator" id="life-container">
+                        <!-- Hearts injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workspace -->
+            <div class="main-workspace">
+                <!-- Info Soal -->
+                <div class="task-panel">
+                    <div class="task-title" id="level-title">Level 1: Inisialisasi</div>
+                    <div class="task-desc" id="level-desc">
+                        Deskripsi masalah akan muncul di sini.
+                    </div>
+                    <div style="margin-top: auto; color: #666; font-size: 0.8rem; font-style: italic;">
+                        *Klik blok di Source Code untuk menambahkannya ke Area Kompilasi. Klik di Area Kompilasi untuk menghapus.
+                    </div>
+                </div>
+
+                <!-- Area Bangun -->
+                <div class="build-area">
+                    <!-- Tempat Jawaban -->
+                    <div class="drop-zone" id="solution-area">
+                        <!-- Blok jawaban user akan masuk sini -->
+                    </div>
+
+                    <!-- Pilihan Jawaban -->
+                    <div class="source-zone" id="source-area">
+                        <!-- Blok opsi muncul sini -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Bar -->
+            <div class="controls">
+                <button class="btn btn-compile" onclick="game.compileAnswer()">COMPILE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYAR AKHIR -->
+    <div id="end-screen" class="screen">
+        <div class="panel result-card">
+            <h2 id="end-title">SIMULASI SELESAI</h2>
+            <div class="score-display" id="final-score">0</div>
+            
+            <div class="final-stats">
+                <p>OPERATOR : <span id="end-name" style="color:white"></span></p>
+                <p>UNIT     : <span id="end-class" style="color:white"></span></p>
+                <p>STATUS   : <span id="end-status" style="color:var(--accent-green)">SUCCESS</span></p>
+            </div>
+
+            <button class="btn btn-restart" onclick="location.reload()">RESTART SYSTEM</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA SOAL (KURIKULUM INFORMATIKA FASE F - ALGORITMA) ---
+        // Topik: Variabel, Kondisional, Perulangan, Array, Pencarian
+        const levels = [
+            {
+                id: 1,
+                title: "Pertukaran Variabel (Swapping)",
+                desc: "Anda memiliki dua gelas, A berisi Kopi dan B berisi Teh. Tukar isinya sehingga A berisi Teh dan B berisi Kopi. Gunakan variabel sementara (Temp).",
+                correctOrder: ["Simpan isi A ke Temp", "Isi A dengan B", "Isi B dengan Temp"],
+                distractors: ["Isi A dengan Temp", "Kosongkan B", "Minum Kopi"]
+            },
+            {
+                id: 2,
+                title: "Menentukan Nilai Maksimum",
+                desc: "Diberikan dua angka dalam variabel X dan Y. Tampilkan angka yang lebih besar.",
+                correctOrder: ["Baca X dan Y", "Jika X > Y maka", "Tampilkan X", "Jika tidak (Else)", "Tampilkan Y"],
+                distractors: ["Tampilkan X + Y", "Ulangi X kali"]
+            },
+            {
+                id: 3,
+                title: "Algoritma Lampu Lalu Lintas",
+                desc: "Buat logika sederhana untuk menentukan tindakan pengendara berdasarkan warna lampu.",
+                correctOrder: ["Lihat Warna Lampu", "Jika Merah, Berhenti", "Jika Kuning, Bersiap", "Jika Hijau, Jalan"],
+                distractors: ["Jika Biru, Terbang", "Matikan Mesin"]
+            },
+            {
+                id: 4,
+                title: "Perulangan (Looping) Sederhana",
+                desc: "Cetak angka dari 1 sampai 5 secara berurutan.",
+                correctOrder: ["Set i = 1", "Selama i <= 5 kerjakan:", "Cetak i", "Tambah i dengan 1", "Akhir Perulangan"],
+                distractors: ["Set i = 10", "Kurangi i dengan 1", "Cetak 'Halo'"]
+            },
+            {
+                id: 5,
+                title: "Menghitung Rata-Rata",
+                desc: "Diberikan array NIlai berisi 5 angka. Hitung rata-ratanya.",
+                correctOrder: ["Set Total = 0", "Untuk setiap angka di Nilai", "Tambahkan angka ke Total", "RataRata = Total / 5", "Tampilkan RataRata"],
+                distractors: ["Total = Total * angka", "RataRata = 5 / Total"]
+            },
+            {
+                id: 6,
+                title: "Pencarian Linear (Linear Search)",
+                desc: "Cari apakah angka 7 ada di dalam tumpukan kartu.",
+                correctOrder: ["Ambil kartu satu per satu", "Jika kartu bernilai 7", "Teriak 'Ketemu!'", "Berhenti Mencari", "Lanjut ke kartu berikutnya"],
+                distractors: ["Urutkan kartu dulu", "Buang kartu"]
+            }
+        ];
+
+        // --- GAME ENGINE ---
+        
+        const game = {
+            playerName: "GUEST",
+            playerClass: "PLAYER",
+            currentLevelIndex: 0,
+            score: 0,
+            lives: 3,
+            maxLives: 3,
+            userSequence: [], // Menyimpan urutan blok yang dipilih user
+
+            init: function() {
+                // Inisialisasi tidak memerlukan event listener form lagi
+            },
+
+            startGame: function() {
+                // Set default name (karena input dihapus)
+                this.playerName = "GUEST";
+                this.playerClass = "PLAYER";
+                
+                // Update UI info
+                document.getElementById('display-name').textContent = `OPERATOR: ${this.playerName}`;
+                document.getElementById('display-class').textContent = `UNIT: ${this.playerClass}`;
+                
+                this.updateLivesUI();
+                
+                // Switch Screen
+                document.getElementById('start-screen').classList.remove('active');
+                document.getElementById('game-screen').classList.add('active');
+                
+                this.loadLevel(0);
+            },
+
+            updateLivesUI: function() {
+                const container = document.getElementById('life-container');
+                container.innerHTML = '';
+                for(let i=0; i<this.maxLives; i++) {
+                    const heart = document.createElement('div');
+                    heart.className = i < this.lives ? 'heart' : 'heart lost';
+                    container.appendChild(heart);
+                }
+            },
+
+            loadLevel: function(index) {
+                if (index >= levels.length) {
+                    this.endGame(true);
+                    return;
+                }
+
+                this.currentLevelIndex = index;
+                this.userSequence = [];
+                const levelData = levels[index];
+
+                // Set Text
+                document.getElementById('level-title').textContent = `LEVEL ${index + 1}: ${levelData.title}`;
+                document.getElementById('level-desc').textContent = levelData.desc;
+
+                // Clear Areas
+                const sourceArea = document.getElementById('source-area');
+                const solutionArea = document.getElementById('solution-area');
+                sourceArea.innerHTML = '';
+                solutionArea.innerHTML = '';
+                solutionArea.classList.remove('has-items');
+
+                // Gabungkan jawaban benar dan pengecoh, lalu acak
+                let allBlocks = [...levelData.correctOrder, ...levelData.distractors];
+                allBlocks = this.shuffleArray(allBlocks);
+
+                // Render Blocks di Source Area
+                allBlocks.forEach(text => {
+                    const block = document.createElement('div');
+                    block.className = 'code-block';
+                    block.textContent = text;
+                    block.onclick = () => this.addToSolution(text, block);
+                    sourceArea.appendChild(block);
+                });
+            },
+
+            addToSolution: function(text, sourceElement) {
+                // Pindahkan logika ke visual
+                this.userSequence.push(text);
+                
+                // Hapus dari source (visual only, bisa disembunyikan)
+                sourceElement.style.display = 'none';
+
+                // Buat elemen baru di solution area
+                const solBlock = document.createElement('div');
+                solBlock.className = 'code-block';
+                solBlock.textContent = text;
+                // Klik di solution area mengembalikan ke source
+                solBlock.onclick = () => this.removeFromSolution(text, solBlock, sourceElement);
+                
+                document.getElementById('solution-area').appendChild(solBlock);
+                document.getElementById('solution-area').classList.add('has-items');
+            },
+
+            removeFromSolution: function(text, solElement, originalSourceElement) {
+                // Hapus dari array logic
+                const index = this.userSequence.indexOf(text);
+                if (index > -1) {
+                    this.userSequence.splice(index, 1);
+                }
+
+                // Hapus elemen visual
+                solElement.remove();
+                
+                // Munculkan kembali di source
+                originalSourceElement.style.display = 'flex';
+
+                if(this.userSequence.length === 0) {
+                    document.getElementById('solution-area').classList.remove('has-items');
+                }
+            },
+
+            compileAnswer: function() {
+                const currentLevel = levels[this.currentLevelIndex];
+                const solutionArea = document.getElementById('solution-area');
+
+                // 1. Cek apakah kosong
+                if(this.userSequence.length === 0) {
+                    alert("Sistem Error: Tidak ada algoritma yang dimasukkan.");
+                    return;
+                }
+
+                // 2. Cek Kebenaran (Isi dan Urutan harus sama persis)
+                const isCorrect = JSON.stringify(this.userSequence) === JSON.stringify(currentLevel.correctOrder);
+
+                if (isCorrect) {
+                    // BENAR
+                    this.score += 100 + (this.lives * 10); // Bonus nyawa
+                    document.getElementById('score-val').textContent = this.score;
+                    
+                    // Efek Visual
+                    solutionArea.classList.add('flash-green');
+                    setTimeout(() => solutionArea.classList.remove('flash-green'), 500);
+
+                    setTimeout(() => {
+                        alert("KOMPILASI BERHASIL! Algoritma valid.");
+                        this.loadLevel(this.currentLevelIndex + 1);
+                    }, 300);
+
+                } else {
+                    // SALAH
+                    this.lives--;
+                    this.updateLivesUI();
+                    
+                    // Efek Visual Shake
+                    solutionArea.classList.add('shake');
+                    setTimeout(() => solutionArea.classList.remove('shake'), 500);
+
+                    if(this.lives <= 0) {
+                        setTimeout(() => this.endGame(false), 500);
+                    } else {
+                        // Feedback spesifik sederhana
+                        if(this.userSequence.length !== currentLevel.correctOrder.length) {
+                             alert(`ERROR: Jumlah langkah tidak sesuai. Sisa nyawa: ${this.lives}`);
+                        } else {
+                             alert(`ERROR: Urutan logika salah. Debug dan coba lagi. Sisa nyawa: ${this.lives}`);
+                        }
+                    }
+                }
+            },
+
+            endGame: function(isWin) {
+                document.getElementById('game-screen').classList.remove('active');
+                document.getElementById('end-screen').classList.add('active');
+
+                const endTitle = document.getElementById('end-title');
+                const endStatus = document.getElementById('end-status');
+                
+                document.getElementById('end-name').textContent = this.playerName;
+                document.getElementById('end-class').textContent = this.playerClass;
+                document.getElementById('final-score').textContent = this.score;
+
+                if(isWin) {
+                    endTitle.textContent = "SISTEM OPTIMAL";
+                    endStatus.textContent = "SELESAI - SEMPURNA";
+                    endStatus.style.color = "var(--accent-green)";
+                } else {
+                    endTitle.textContent = "SISTEM GAGAL";
+                    endStatus.textContent = "TERMINATED - OUT OF LIVES";
+                    endStatus.style.color = "var(--accent-red)";
+                }
+            },
+
+            shuffleArray: function(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+        };
+
+        // Mulai Inisialisasi
+        window.onload = () => game.init();
+
+    </script>
+</body>
+</html>

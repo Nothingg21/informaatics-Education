@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberSentinel: Protocol Zero - Edukasi Keamanan Jaringan</title>
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --neon-green: #00ff41;
+            --neon-red: #ff3131;
+            --bg-dark: #050510;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: var(--bg-dark);
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--neon-blue);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- Scanline Effect & CRT Overlay --- */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .crt-flicker {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 100;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.02; }
+            50% { opacity: 0.05; }
+            100% { opacity: 0.02; }
+        }
+
+        /* --- UI Layers --- */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(5, 5, 16, 0.95);
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* --- Typography & Elements --- */
+        h1 {
+            font-size: 3rem;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--neon-blue);
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: var(--neon-green);
+            text-shadow: 0 0 5px var(--neon-green);
+        }
+
+        p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            text-align: center;
+            line-height: 1.5;
+            color: #ccc;
+        }
+
+        button {
+            background: transparent;
+            color: var(--neon-pink);
+            border: 2px solid var(--neon-pink);
+            padding: 20px 60px;
+            font-size: 1.8rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 40px;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px var(--neon-pink);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background: var(--neon-pink);
+            color: black;
+            box-shadow: 0 0 30px var(--neon-pink);
+            transform: scale(1.05);
+        }
+
+        /* --- HUD (In-Game UI) --- */
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .hud-panel {
+            background: rgba(0, 20, 40, 0.8);
+            border: 1px solid var(--neon-blue);
+            padding: 10px 20px;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .hud-label {
+            color: var(--neon-blue);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            display: block;
+        }
+
+        .hud-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 5px currentColor;
+        }
+
+        /* --- Quiz Modal --- */
+        #quiz-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 700px;
+            background: rgba(0, 10, 20, 0.98);
+            border: 2px solid var(--neon-green);
+            padding: 30px;
+            z-index: 20;
+            display: none;
+            box-shadow: 0 0 50px rgba(0, 255, 65, 0.3);
+            text-align: center;
+        }
+
+        #quiz-modal.active {
+            display: flex;
+            flex-direction: column;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { transform: translate(-50%, -60%); opacity: 0; }
+            to { transform: translate(-50%, -50%); opacity: 1; }
+        }
+
+        .quiz-question {
+            font-size: 1.4rem;
+            color: white;
+            margin-bottom: 25px;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .quiz-btn {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: none;
+            transition: all 0.2s;
+        }
+
+        .quiz-btn:hover {
+            background: var(--neon-green);
+            color: black;
+            box-shadow: 0 0 15px var(--neon-green);
+            transform: scale(1.02);
+        }
+
+        /* --- Feedback Overlay --- */
+        #feedback-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 0, 0, 0.3);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 4;
+        }
+        
+        /* Hint untuk kontrol */
+        .controls-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.7);
+            font-size: 1rem;
+            pointer-events: none;
+            text-shadow: 0 0 5px black;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 15px;
+            border-radius: 15px;
+        }
+
+        /* --- Glitch Text Animation --- */
+        .glitch {
+            position: relative;
+        }
+        
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark);
+        }
+        
+        .glitch::before {
+            left: 2px;
+            text-shadow: -1px 0 red;
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        
+        .glitch::after {
+            left: -2px;
+            text-shadow: -1px 0 blue;
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim-1 2s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim-1 {
+            0% { clip: rect(20px, 9999px, 15px, 0); }
+            20% { clip: rect(50px, 9999px, 60px, 0); }
+            40% { clip: rect(10px, 9999px, 80px, 0); }
+            60% { clip: rect(90px, 9999px, 40px, 0); }
+            80% { clip: rect(20px, 9999px, 10px, 0); }
+            100% { clip: rect(60px, 9999px, 5px, 0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(10px, 9999px, 90px, 0); }
+            20% { clip: rect(80px, 9999px, 10px, 0); }
+            40% { clip: rect(30px, 9999px, 50px, 0); }
+            60% { clip: rect(10px, 9999px, 120px, 0); }
+            80% { clip: rect(60px, 9999px, 70px, 0); }
+            100% { clip: rect(40px, 9999px, 20px, 0); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="crt-flicker"></div>
+
+    <!-- Container Utama -->
+    <div id="game-container">
+        
+        <!-- Canvas Game -->
+        <canvas id="gameCanvas"></canvas>
+        <div id="feedback-overlay"></div>
+
+        <!-- HUD (Hanya muncul saat main) -->
+        <div id="hud" class="hidden">
+            <div class="hud-panel">
+                <span class="hud-label">Operator</span>
+                <span class="hud-value" id="hud-name">Guest</span>
+            </div>
+            <div class="hud-panel" style="border-color: var(--neon-green)">
+                <span class="hud-label">System Integrity</span>
+                <span class="hud-value" style="color: var(--neon-green)" id="hud-health">100%</span>
+            </div>
+            <div class="hud-panel" style="border-color: var(--neon-pink)">
+                <span class="hud-label">Threats Neutralized</span>
+                <span class="hud-value" style="color: var(--neon-pink)" id="hud-score">0</span>
+            </div>
+        </div>
+        
+        <div id="controls-hint" class="controls-hint hidden">
+            [WASD] Move &bull; [MOUSE] Aim & Shoot
+        </div>
+
+        <!-- Screen 1: Start Menu (Input Hapus) -->
+        <div id="start-screen" class="screen">
+            <h1 class="glitch" data-text="CYBERSENTINEL">CYBERSENTINEL</h1>
+            <p>Informatika (Keamanan Jaringan)<br></p>
+            <br>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <p style="margin-bottom: 30px; color: var(--neon-green);">SYSTEM READY... WAITING FOR INPUT</p>
+                <button onclick="startGame()">INITIATE PROTOCOL</button>
+            </div>
+        </div>
+
+        <!-- Quiz Modal -->
+        <div id="quiz-modal">
+            <h2 style="color: var(--neon-green)">SECURITY ALERT!</h2>
+            <p class="quiz-question" id="quiz-question-text">Loading...</p>
+            <div class="quiz-options" id="quiz-options-container">
+                <!-- Buttons injected via JS -->
+            </div>
+        </div>
+
+        <!-- Screen 3: Game Over -->
+        <div id="game-over-screen" class="screen hidden">
+            <h1 style="color: var(--neon-red)" class="glitch" data-text="SYSTEM FAILURE">SYSTEM FAILURE</h1>
+            <h2 id="final-status">Firewall Breached</h2>
+            
+            <div style="background: rgba(0,0,0,0.8); padding: 20px; border: 1px solid var(--neon-blue); margin: 20px; min-width: 300px;">
+                <p>Operator: <span id="end-name" style="color: white; font-weight: bold;"></span></p>
+                <p>Final Score: <span id="end-score" style="color: var(--neon-pink); font-size: 2rem; font-weight: bold;">0</span></p>
+            </div>
+
+            <button onclick="resetGame()">REBOOT SYSTEM</button>
+        </div>
+
+    </div>
+
+<script>
+    /**
+     * CYBERSENTINEL: PROTOCOL ZERO
+     * Game Logic & Rendering Engine
+     */
+
+    // --- Konfigurasi & Variabel Global ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // State Game
+    let gameState = 'START'; // START, PLAY, QUIZ, GAMEOVER
+    let animationFrameId; // Untuk mengontrol loop animasi dengan aman
+    let frames = 0;
+    let score = 0;
+    let health = 100;
+    let studentName = "CyberAgent";
+    let quizInterval = 700; 
+    let lastQuizFrame = 0;
+    let difficultyMultiplier = 1;
+
+    // Input States
+    const keys = {
+        w: false, a: false, s: false, d: false,
+        ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false
+    };
+
+    // Entitas
+    let enemies = [];
+    let particles = [];
+    let projectiles = [];
+    let mouse = { x: 0, y: 0 };
+    
+    // PLAYER UPGRADE: Kecepatan dinaikkan ke 9 (sebelumnya 5)
+    let player = { x: 0, y: 0, radius: 30, angle: 0, speed: 9 };
+
+    // Bank Soal Keamanan Jaringan (Fase F)
+    const questionBank = [
+        {
+            q: "Seorang pengguna menerima email yang mengaku dari bank meminta password. Ini adalah contoh serangan?",
+            options: ["Phishing", "DDoS", "SQL Injection", "Brute Force"],
+            a: 0
+        },
+        {
+            q: "Apa fungsi utama Firewall dalam keamanan jaringan?",
+            options: ["Mempercepat internet", "Menyaring lalu lintas data", "Menyimpan password", "Menghapus virus file"],
+            a: 1
+        },
+        {
+            q: "Serangan yang membanjiri server dengan trafik palsu hingga server down disebut...",
+            options: ["Malware", "Phishing", "DDoS", "Spyware"],
+            a: 2
+        },
+        {
+            q: "Mekanisme untuk mengubah data menjadi kode rahasia agar tidak bisa dibaca pihak lain adalah...",
+            options: ["Hacking", "Decryption", "Enkripsi", "Autentikasi"],
+            a: 2
+        },
+        {
+            q: "Manakah yang termasuk contoh 'Strong Password'?",
+            options: ["admin123", "password", "S3cUr!ty_2024", "tanggal123"],
+            a: 2
+        },
+        {
+            q: "Jenis malware yang mengunci data korban dan meminta tebusan uang disebut...",
+            options: ["Adware", "Ransomware", "Worm", "Trojan"],
+            a: 1
+        },
+        {
+            q: "Protokol keamanan yang membuat website lebih aman (ikon gembok hijau) adalah...",
+            options: ["HTTP", "FTP", "HTTPS", "SMTP"],
+            a: 2
+        },
+        {
+            q: "Software yang merekam setiap ketikan tombol keyboard pengguna secara diam-diam disebut...",
+            options: ["Keylogger", "Antivirus", "Firewall", "Adblocker"],
+            a: 0
+        }
+    ];
+
+    // --- Inisialisasi & Event Listeners ---
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        // Hanya reset posisi player saat resize jika belum mulai main
+        if(gameState === 'START') {
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+        }
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+
+    window.addEventListener('mousedown', (e) => {
+        if (gameState === 'PLAY') {
+            shootProjectile();
+        }
+    });
+
+    // Kontrol Keyboard (WASD / Arrows)
+    window.addEventListener('keydown', (e) => {
+        if(keys.hasOwnProperty(e.key)) keys[e.key] = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if(keys.hasOwnProperty(e.key)) keys[e.key] = false;
+    });
+
+
+    // --- Visual Rendering Functions ---
+
+    function drawHexagon(x, y, radius, color, glow = true) {
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            ctx.lineTo(
+                x + radius * Math.cos(i * Math.PI / 3),
+                y + radius * Math.sin(i * Math.PI / 3)
+            );
+        }
+        ctx.closePath();
+        ctx.fillStyle = color;
+        
+        if(glow) {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = color;
+        } else {
+            ctx.shadowBlur = 0;
+        }
+        
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.shadowBlur = 0; 
+    }
+
+    function drawPlayer() {
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        
+        const angleToMouse = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+        ctx.rotate(angleToMouse);
+        
+        // Badan Utama
+        ctx.beginPath();
+        ctx.moveTo(20, 0); 
+        ctx.lineTo(-15, -15); 
+        ctx.lineTo(-10, 0); 
+        ctx.lineTo(-15, 15); 
+        ctx.closePath();
+        
+        ctx.fillStyle = '#050510';
+        ctx.fill();
+        ctx.strokeStyle = varColor('neon-blue');
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = varColor('neon-blue');
+        ctx.stroke();
+
+        // Cannon
+        ctx.beginPath();
+        ctx.moveTo(15, 0);
+        ctx.lineTo(35, 0);
+        ctx.strokeStyle = varColor('neon-green');
+        ctx.stroke();
+
+        // Shield Effect
+        ctx.rotate(-angleToMouse); 
+        player.angle += 0.05;
+        ctx.rotate(player.angle);
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, player.radius + 10, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0, 243, 255, 0.3)`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 15]);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function varColor(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue('--' + name).trim();
+    }
+
+    // --- Game Logic ---
+
+    function startGame() {
+        // Langsung mulai tanpa cek input nama/kelas
+        studentName = "CyberAgent"; 
+
+        // Update UI
+        document.getElementById('hud-name').innerText = studentName;
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('game-over-screen').classList.add('hidden');
+        document.getElementById('hud').classList.remove('hidden');
+        document.getElementById('controls-hint').classList.remove('hidden');
+
+        // Reset Stats
+        score = 0;
+        health = 100;
+        enemies = [];
+        particles = [];
+        projectiles = [];
+        frames = 0;
+        lastQuizFrame = 0;
+        difficultyMultiplier = 1;
+        
+        player.x = canvas.width / 2;
+        player.y = canvas.height / 2;
+
+        gameState = 'PLAY';
+        
+        // Stop any existing loop before starting new one
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        animate();
+    }
+
+    function updatePlayerMovement() {
+        let dx = 0;
+        let dy = 0;
+
+        if (keys.w || keys.ArrowUp) dy -= player.speed;
+        if (keys.s || keys.ArrowDown) dy += player.speed;
+        if (keys.a || keys.ArrowLeft) dx -= player.speed;
+        if (keys.d || keys.ArrowRight) dx += player.speed;
+
+        // Normalisasi diagonal
+        if (dx !== 0 && dy !== 0) {
+            dx *= 0.707;
+            dy *= 0.707;
+        }
+
+        player.x += dx;
+        player.y += dy;
+
+        // Batas layar
+        if(player.x < player.radius) player.x = player.radius;
+        if(player.x > canvas.width - player.radius) player.x = canvas.width - player.radius;
+        if(player.y < player.radius) player.y = player.radius;
+        if(player.y > canvas.height - player.radius) player.y = canvas.height - player.radius;
+    }
+
+    function spawnEnemy() {
+        const radius = 20;
+        let x, y;
+        
+        if (Math.random() < 0.5) {
+            x = Math.random() < 0.5 ? 0 - radius : canvas.width + radius;
+            y = Math.random() * canvas.height;
+        } else {
+            x = Math.random() * canvas.width;
+            y = Math.random() < 0.5 ? 0 - radius : canvas.height + radius;
+        }
+
+        const type = Math.random() > 0.8 ? 'TROJAN' : 'MALWARE'; 
+        const color = type === 'TROJAN' ? '#ff00ff' : '#ff3131';
+
+        enemies.push({ x, y, radius, color, type, speedBase: Math.random() * 0.5 + 1.5 });
+    }
+
+    function shootProjectile() {
+        const angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+        
+        const velocity = {
+            x: Math.cos(angle) * 15, // Projectile lebih cepat
+            y: Math.sin(angle) * 15
+        };
+        
+        const spawnX = player.x + Math.cos(angle) * 30;
+        const spawnY = player.y + Math.sin(angle) * 30;
+
+        projectiles.push({
+            x: spawnX,
+            y: spawnY,
+            radius: 4,
+            velocity: velocity,
+            color: '#00ff41'
+        });
+    }
+
+    function createExplosion(x, y, color) {
+        for (let i = 0; i < 8; i++) {
+            particles.push({
+                x: x,
+                y: y,
+                radius: Math.random() * 3,
+                color: color,
+                velocity: {
+                    x: (Math.random() - 0.5) * 5,
+                    y: (Math.random() - 0.5) * 5
+                },
+                alpha: 1
+            });
+        }
+    }
+
+    // --- Logic Kuis ---
+
+    function triggerQuiz() {
+        // Cancel animation loop to pause completely
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        
+        gameState = 'QUIZ';
+        
+        const modal = document.getElementById('quiz-modal');
+        const qText = document.getElementById('quiz-question-text');
+        const optContainer = document.getElementById('quiz-options-container');
+
+        const qIndex = Math.floor(Math.random() * questionBank.length);
+        const question = questionBank[qIndex];
+
+        qText.innerText = question.q;
+        optContainer.innerHTML = '';
+
+        question.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-btn';
+            btn.innerText = opt;
+            btn.onclick = () => handleQuizAnswer(index === question.a);
+            optContainer.appendChild(btn);
+        });
+
+        modal.classList.add('active');
+    }
+
+    function handleQuizAnswer(isCorrect) {
+        // Prevent double click logic
+        if (gameState !== 'QUIZ') return;
+
+        const modal = document.getElementById('quiz-modal');
+        modal.classList.remove('active');
+
+        if (isCorrect) {
+            score += 500;
+            health = Math.min(100, health + 25);
+            createExplosion(player.x, player.y, '#00ff41');
+        } else {
+            health -= 20;
+            triggerDamageEffect();
+        }
+
+        lastQuizFrame = frames;
+        difficultyMultiplier += 0.15;
+        
+        if (health <= 0) {
+            gameOver();
+        } else {
+            // Restart game loop safely
+            gameState = 'PLAY';
+            animate(); 
+        }
+    }
+
+    function triggerDamageEffect() {
+        const overlay = document.getElementById('feedback-overlay');
+        overlay.style.opacity = '1';
+        setTimeout(() => {
+            overlay.style.opacity = '0';
+        }, 200);
+    }
+
+    function gameOver() {
+        gameState = 'GAMEOVER';
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+        document.getElementById('game-over-screen').classList.remove('hidden');
+        document.getElementById('hud').classList.add('hidden');
+        document.getElementById('controls-hint').classList.add('hidden');
+        
+        document.getElementById('end-name').innerText = studentName;
+        document.getElementById('end-score').innerText = score;
+
+        const status = score > 3000 ? "System Secure" : "Data Corrupted";
+        document.getElementById('final-status').innerText = status;
+        document.getElementById('final-status').style.color = score > 3000 ? "var(--neon-green)" : "var(--neon-red)";
+    }
+
+    function resetGame() {
+        startGame();
+    }
+
+    // --- Main Animation Loop ---
+
+    function animate() {
+        if (gameState !== 'PLAY') return;
+
+        // Loop Request
+        animationFrameId = requestAnimationFrame(animate);
+
+        ctx.fillStyle = 'rgba(5, 5, 16, 0.3)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        updatePlayerMovement();
+        drawPlayer();
+        
+        frames++;
+
+        // UI Updates
+        document.getElementById('hud-score').innerText = score;
+        document.getElementById('hud-health').innerText = Math.floor(health) + "%";
+        document.getElementById('hud-health').style.color = health < 30 ? 'red' : 'var(--neon-green)';
+
+        // Spawn Enemy Logic
+        if (frames % 60 === 0) {
+            spawnEnemy();
+        }
+
+        // Trigger Quiz Logic
+        if (frames - lastQuizFrame > quizInterval) {
+            triggerQuiz();
+        }
+
+        // Particle System
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            if (p.alpha <= 0) {
+                particles.splice(i, 1);
+            } else {
+                p.velocity.x *= 0.95;
+                p.velocity.y *= 0.95;
+                p.x += p.velocity.x;
+                p.y += p.velocity.y;
+                p.alpha -= 0.03;
+
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Projectiles (Reverse Loop for safe deletion)
+        for (let i = projectiles.length - 1; i >= 0; i--) {
+            const proj = projectiles[i];
+            proj.x += proj.velocity.x;
+            proj.y += proj.velocity.y;
+
+            ctx.beginPath();
+            ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
+            ctx.fillStyle = proj.color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = proj.color;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            if (
+                proj.x < 0 || proj.x > canvas.width ||
+                proj.y < 0 || proj.y > canvas.height
+            ) {
+                projectiles.splice(i, 1);
+            }
+        }
+
+        // Enemies (Reverse Loop for safe deletion)
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            const enemy = enemies[i];
+            
+            const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+            const speed = enemy.speedBase * difficultyMultiplier;
+            
+            enemy.velocity = {
+                x: Math.cos(angle) * speed,
+                y: Math.sin(angle) * speed
+            };
+
+            enemy.x += enemy.velocity.x;
+            enemy.y += enemy.velocity.y;
+
+            drawHexagon(enemy.x, enemy.y, enemy.radius, enemy.color);
+
+            let enemyDestroyed = false;
+
+            // Collision: Projectile hit Enemy
+            for (let j = projectiles.length - 1; j >= 0; j--) {
+                const proj = projectiles[j];
+                const dist = Math.hypot(proj.x - enemy.x, proj.y - enemy.y);
+                
+                if (dist - enemy.radius - proj.radius < 0) {
+                    createExplosion(enemy.x, enemy.y, enemy.color);
+                    projectiles.splice(j, 1);
+                    enemyDestroyed = true;
+                    score += 100;
+                    break; 
+                }
+            }
+
+            if (enemyDestroyed) {
+                enemies.splice(i, 1);
+                continue; 
+            }
+
+            // Collision: Enemy hit Player
+            const distPlayer = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+            if (distPlayer - enemy.radius - player.radius < 0) {
+                health -= 10;
+                triggerDamageEffect();
+                enemies.splice(i, 1);
+                createExplosion(player.x, player.y, 'red');
+
+                if (health <= 0) {
+                    gameOver();
+                    break;
+                }
+            }
+        }
+    }
+
+</script>
+</body>
+</html>

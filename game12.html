@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberLogic: Boolean Protocol</title>
+    <style>
+        /* --- CSS RESET & BASIC SETUP --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: #050505;
+            color: #e0e0e0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- CYBERPUNK AESTHETICS --- */
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --neon-green: #00ff41;
+            --neon-yellow: #fcee0a;
+            --bg-dark: #0a0a12;
+            --panel-bg: rgba(16, 20, 30, 0.9);
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 999;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            100% { opacity: 1; }
+        }
+
+        /* --- LAYOUT CONTAINERS --- */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 1024px;
+            max-height: 768px;
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 20px var(--neon-blue), inset 0 0 50px rgba(0, 243, 255, 0.2);
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg-dark);
+            transition: opacity 0.5s;
+            z-index: 10;
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* --- UI ELEMENTS --- */
+        h1 {
+            font-size: 3rem;
+            color: var(--neon-blue);
+            text-shadow: 4px 4px 0px var(--neon-pink);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-align: center;
+        }
+
+        .cyber-input {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            margin: 10px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 0 10px var(--neon-green);
+            transition: 0.3s;
+        }
+
+        .cyber-input:focus {
+            outline: none;
+            background: rgba(0, 255, 65, 0.1);
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .cyber-btn {
+            background: transparent;
+            border: 2px solid var(--neon-pink);
+            color: var(--neon-pink);
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            margin-top: 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cyber-btn:hover {
+            background: var(--neon-pink);
+            color: #000;
+            box-shadow: 0 0 30px var(--neon-pink);
+        }
+
+        /* --- HUD --- */
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(0,0,0,0.8);
+            border-bottom: 1px solid var(--neon-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 20;
+            font-size: 1rem;
+            color: var(--neon-blue);
+        }
+
+        .hud-item span {
+            color: #fff;
+            text-shadow: 0 0 5px #fff;
+        }
+
+        /* --- GAMEPLAY AREA --- */
+        #workspace {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            margin-top: 60px; /* Space for HUD */
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Canvas for Wires */
+        #wire-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let clicks pass through to divs */
+            z-index: 1;
+        }
+
+        /* Circuit Components */
+        .component {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            transition: transform 0.2s;
+        }
+
+        /* INPUT SWITCHES */
+        .switch-container {
+            width: 60px;
+            height: 80px;
+            cursor: pointer;
+        }
+
+        .switch-body {
+            width: 40px;
+            height: 60px;
+            background: #222;
+            border: 2px solid #555;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .switch-toggle {
+            width: 30px;
+            height: 25px;
+            background: #444;
+            position: absolute;
+            left: 3px;
+            transition: top 0.2s, background 0.2s;
+            box-shadow: inset 0 0 5px #000;
+        }
+
+        .switch-active .switch-toggle {
+            background: var(--neon-green);
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .switch-label {
+            margin-top: 5px;
+            font-weight: bold;
+            color: var(--neon-blue);
+        }
+
+        .value-display {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .val-0 { color: #555; }
+        .val-1 { color: var(--neon-green); text-shadow: 0 0 8px var(--neon-green); }
+
+        /* LOGIC GATES (Visualized via SVG in CSS background or shapes) */
+        .gate {
+            width: 100px;
+            height: 60px;
+            background: #111;
+            border: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+            position: relative;
+        }
+
+        /* Visual distinction for gates */
+        .gate-AND { border-radius: 5px 30px 30px 5px; }
+        .gate-OR { border-radius: 5px 50% 50% 5px; } /* Simplification */
+        .gate-NOT { border-radius: 0 50px 50px 0; width: 60px; clip-path: polygon(0 0, 100% 50%, 0 100%); background: #111; border: none; box-shadow: none; filter: drop-shadow(0 0 2px var(--neon-pink)); }
+        .gate-NOT::after { content: 'NOT'; position: absolute; left: -10px; font-size: 0.7rem; color: var(--neon-pink); }
+        
+        /* OUTPUT NODE */
+        .output-core {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #333;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #333;
+            transition: 0.3s;
+        }
+
+        .output-active {
+            border-color: var(--neon-green);
+            background: radial-gradient(circle, #fff, var(--neon-green));
+            color: #000;
+            box-shadow: 0 0 30px var(--neon-green);
+        }
+
+        .level-objective {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--neon-yellow);
+            text-shadow: 0 0 5px var(--neon-yellow);
+            pointer-events: none;
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+        }
+
+        /* GAME OVER STATS */
+        .stat-row {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            color: #fff;
+            border-bottom: 1px solid #333;
+            width: 300px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .correct-animation {
+            animation: pulse-green 0.5s ease-in-out;
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); box-shadow: 0 0 50px var(--neon-green); }
+            100% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="crt-overlay"></div>
+
+    <div id="game-container">
+        
+        <!-- START SCREEN -->
+        <div id="start-screen" class="screen">
+            <h1>CyberLogic<br>Protocol</h1>
+            <p style="color: var(--neon-blue); margin-bottom: 20px;">SISTEM LOGIKA BOOLEAN: OFFLINE</p>
+            
+            <!-- Input fields removed -->
+            
+            <button class="cyber-btn" onclick="startGame()">HUBUNGKAN SISTEM</button>
+            <p style="margin-top: 20px; font-size: 0.8rem; color: #666;">Target:(Informatika Fase F)</p>
+        </div>
+
+        <!-- GAMEPLAY SCREEN -->
+        <div id="game-screen" class="screen hidden">
+            <div id="hud">
+                <div class="hud-item">OPERATOR: <span id="hud-name">User</span></div>
+                <div class="hud-item">KELAS: <span id="hud-class">XII</span></div>
+                <div class="hud-item">LEVEL: <span id="hud-level">1</span></div>
+                <div class="hud-item">NYAWA: <span id="hud-lives">❤️❤️❤️</span></div>
+                <div class="hud-item">SKOR: <span id="hud-score">0</span></div>
+            </div>
+
+            <div id="workspace">
+                <canvas id="wire-canvas"></canvas>
+                <!-- Dynamic Content Will Be Injected Here -->
+            </div>
+
+            <div class="level-objective" id="objective-text">
+                MISI: Atur input agar Core Output menyala (Bernilai 1)
+            </div>
+            
+            <div style="position: absolute; top: 70px; right: 20px;">
+                <button onclick="checkCircuit()" class="cyber-btn" style="font-size: 1rem; padding: 10px 20px;">VERIFIKASI ALIRAN</button>
+            </div>
+        </div>
+
+        <!-- GAME OVER SCREEN -->
+        <div id="end-screen" class="screen hidden">
+            <h1 id="end-title" style="color: var(--neon-pink);">SISTEM TERPUTUS</h1>
+            
+            <div class="stat-row">
+                <span>Nama:</span> <span id="end-name">-</span>
+            </div>
+            <div class="stat-row">
+                <span>Kelas:</span> <span id="end-class">-</span>
+            </div>
+            <div class="stat-row">
+                <span>Skor Akhir:</span> <span id="end-score" style="color: var(--neon-green);">0</span>
+            </div>
+            
+            <button class="cyber-btn" onclick="resetGame()">REBOOT SYSTEM</button>
+        </div>
+
+    </div>
+
+    <script>
+        /**
+         * CYBERLOGIC PROTOCOL ENGINE
+         * Konsep: Siswa bertindak sebagai teknisi sirkuit.
+         * Mereka diberikan rangkaian gerbang logika dengan Input switch.
+         * Tugas: Mengubah state switch (0/1) agar Output akhir menjadi 1 (True/Nyala).
+         */
+
+        // --- STATE VARIABLES ---
+        let gameState = {
+            playerName: "",
+            playerClass: "",
+            score: 0,
+            lives: 3,
+            currentLevelIndex: 0,
+            circuitData: null // Stores current level structure
+        };
+
+        // --- LEVELS DATA (Database Soal) ---
+        // Types: SWITCH (Input), GATE (Processing), CORE (Output)
+        const levels = [
+            {
+                id: 1,
+                hint: "Gerbang AND hanya menghasilkan 1 jika SEMUA input adalah 1.",
+                nodes: [
+                    { id: 'sw1', type: 'SWITCH', x: 200, y: 150, value: 0, label: 'A' },
+                    { id: 'sw2', type: 'SWITCH', x: 200, y: 350, value: 0, label: 'B' },
+                    { id: 'g1', type: 'GATE', op: 'AND', x: 500, y: 250, inputs: ['sw1', 'sw2'] },
+                    { id: 'core', type: 'CORE', x: 800, y: 250, inputs: ['g1'] }
+                ]
+            },
+            {
+                id: 2,
+                hint: "Gerbang OR menghasilkan 1 jika SALAH SATU input adalah 1.",
+                nodes: [
+                    { id: 'sw1', type: 'SWITCH', x: 200, y: 150, value: 0, label: 'X' },
+                    { id: 'sw2', type: 'SWITCH', x: 200, y: 350, value: 0, label: 'Y' },
+                    { id: 'g1', type: 'GATE', op: 'OR', x: 500, y: 250, inputs: ['sw1', 'sw2'] },
+                    { id: 'core', type: 'CORE', x: 800, y: 250, inputs: ['g1'] }
+                ]
+            },
+            {
+                id: 3,
+                hint: "Gerbang NOT membalikkan nilai. Jika input 0 jadi 1, jika 1 jadi 0.",
+                nodes: [
+                    { id: 'sw1', type: 'SWITCH', x: 150, y: 250, value: 1, label: 'A' },
+                    { id: 'g1', type: 'GATE', op: 'NOT', x: 450, y: 250, inputs: ['sw1'] },
+                    { id: 'core', type: 'CORE', x: 800, y: 250, inputs: ['g1'] }
+                ]
+            },
+            {
+                id: 4,
+                hint: "Kombinasi: (A AND B) OR C. Perhatikan alurnya.",
+                nodes: [
+                    { id: 'sw1', type: 'SWITCH', x: 150, y: 100, value: 0, label: 'A' },
+                    { id: 'sw2', type: 'SWITCH', x: 150, y: 200, value: 0, label: 'B' },
+                    { id: 'sw3', type: 'SWITCH', x: 150, y: 400, value: 0, label: 'C' },
+                    { id: 'g1', type: 'GATE', op: 'AND', x: 400, y: 150, inputs: ['sw1', 'sw2'] },
+                    { id: 'g2', type: 'GATE', op: 'OR', x: 650, y: 250, inputs: ['g1', 'sw3'] },
+                    { id: 'core', type: 'CORE', x: 850, y: 250, inputs: ['g2'] }
+                ]
+            },
+            {
+                id: 5,
+                hint: "Gerbang XOR: Bernilai 1 HANYA jika inputnya BERBEDA.",
+                nodes: [
+                    { id: 'sw1', type: 'SWITCH', x: 200, y: 150, value: 1, label: 'P' },
+                    { id: 'sw2', type: 'SWITCH', x: 200, y: 350, value: 1, label: 'Q' },
+                    { id: 'g1', type: 'GATE', op: 'XOR', x: 500, y: 250, inputs: ['sw1', 'sw2'] },
+                    { id: 'core', type: 'CORE', x: 800, y: 250, inputs: ['g1'] }
+                ]
+            },
+            {
+                id: 6,
+                hint: "Gerbang NAND: Kebalikan dari AND. (A AND B) lalu di-NOT-kan.",
+                nodes: [
+                    { id: 'sw1', type: 'SWITCH', x: 200, y: 150, value: 1, label: 'J' },
+                    { id: 'sw2', type: 'SWITCH', x: 200, y: 350, value: 1, label: 'K' },
+                    { id: 'g1', type: 'GATE', op: 'NAND', x: 500, y: 250, inputs: ['sw1', 'sw2'] },
+                    { id: 'core', type: 'CORE', x: 800, y: 250, inputs: ['g1'] }
+                ]
+            },
+            {
+                id: 7,
+                hint: "Tantangan Kompleks: A XOR (NOT B).",
+                nodes: [
+                    { id: 'sw1', type: 'SWITCH', x: 150, y: 150, value: 0, label: 'A' },
+                    { id: 'sw2', type: 'SWITCH', x: 150, y: 350, value: 1, label: 'B' },
+                    { id: 'g1', type: 'GATE', op: 'NOT', x: 350, y: 350, inputs: ['sw2'] },
+                    { id: 'g2', type: 'GATE', op: 'XOR', x: 600, y: 250, inputs: ['sw1', 'g1'] },
+                    { id: 'core', type: 'CORE', x: 850, y: 250, inputs: ['g2'] }
+                ]
+            }
+        ];
+
+        // --- DOM ELEMENTS ---
+        const screens = {
+            start: document.getElementById('start-screen'),
+            game: document.getElementById('game-screen'),
+            end: document.getElementById('end-screen')
+        };
+        const workspace = document.getElementById('workspace');
+        const canvas = document.getElementById('wire-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- GAME FUNCTIONS ---
+
+        function startGame() {
+            // Set default values without user input
+            gameState.playerName = "OPERATOR";
+            gameState.playerClass = "FASE F";
+            
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.currentLevelIndex = 0;
+
+            updateHUD();
+            switchScreen('game');
+            loadLevel(gameState.currentLevelIndex);
+            
+            // Start Canvas Loop
+            requestAnimationFrame(drawLoop);
+        }
+
+        function switchScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.add('hidden'));
+            screens[screenName].classList.remove('hidden');
+        }
+
+        function updateHUD() {
+            document.getElementById('hud-name').textContent = gameState.playerName;
+            document.getElementById('hud-class').textContent = gameState.playerClass;
+            document.getElementById('hud-score').textContent = gameState.score;
+            document.getElementById('hud-level').textContent = gameState.currentLevelIndex + 1;
+            
+            let hearts = "";
+            for(let i=0; i<gameState.lives; i++) hearts += "❤️";
+            document.getElementById('hud-lives').textContent = hearts;
+        }
+
+        function loadLevel(index) {
+            if (index >= levels.length) {
+                endGame(true); // Win all levels
+                return;
+            }
+
+            // Deep copy level data to avoid modifying reference
+            gameState.circuitData = JSON.parse(JSON.stringify(levels[index]));
+            
+            document.getElementById('objective-text').innerHTML = 
+                `LEVEL ${index+1}: <span style="color:#fff">${gameState.circuitData.hint}</span><br>Target: Output = 1`;
+
+            renderCircuitDOM();
+            updateHUD();
+        }
+
+        function renderCircuitDOM() {
+            // Remove old nodes but keep canvas
+            const oldNodes = document.querySelectorAll('.component');
+            oldNodes.forEach(n => n.remove());
+
+            gameState.circuitData.nodes.forEach(node => {
+                const el = document.createElement('div');
+                el.className = 'component';
+                el.id = node.id;
+                el.style.left = node.x + 'px';
+                el.style.top = node.y + 'px';
+
+                if (node.type === 'SWITCH') {
+                    el.innerHTML = `
+                        <div class="value-display val-${node.value}">${node.value}</div>
+                        <div class="switch-container" onclick="toggleSwitch('${node.id}')">
+                            <div class="switch-body">
+                                <div class="switch-toggle" style="top: ${node.value === 1 ? '5px' : '30px'}; background: ${node.value === 1 ? 'var(--neon-green)' : '#444'}"></div>
+                            </div>
+                        </div>
+                        <div class="switch-label">${node.label}</div>
+                    `;
+                } else if (node.type === 'GATE') {
+                    el.innerHTML = `<div class="gate gate-${node.op}">${node.op}</div>`;
+                } else if (node.type === 'CORE') {
+                    el.innerHTML = `<div class="output-core">0</div>`;
+                }
+
+                workspace.appendChild(el);
+            });
+        }
+
+        function toggleSwitch(id) {
+            const node = gameState.circuitData.nodes.find(n => n.id === id);
+            if (node) {
+                node.value = node.value === 0 ? 1 : 0;
+                // Update Visual
+                const el = document.getElementById(id);
+                const valDisplay = el.querySelector('.value-display');
+                const toggle = el.querySelector('.switch-toggle');
+                
+                valDisplay.textContent = node.value;
+                valDisplay.className = `value-display val-${node.value}`;
+                
+                toggle.style.top = node.value === 1 ? '5px' : '30px';
+                toggle.style.background = node.value === 1 ? 'var(--neon-green)' : '#444';
+            }
+        }
+
+        // --- LOGIC ENGINE ---
+
+        function getNodeValue(nodeId) {
+            const node = gameState.circuitData.nodes.find(n => n.id === nodeId);
+            if (!node) return 0;
+
+            if (node.type === 'SWITCH') {
+                return node.value;
+            } 
+            else if (node.type === 'GATE' || node.type === 'CORE') {
+                // Recursive calculation
+                const inputValues = node.inputs.map(inputId => getNodeValue(inputId));
+                
+                if (node.type === 'CORE') return inputValues[0]; // Core just passes thorough
+
+                const [a, b] = inputValues;
+                
+                switch (node.op) {
+                    case 'AND': return (a && b) ? 1 : 0;
+                    case 'OR': return (a || b) ? 1 : 0;
+                    case 'NOT': return (!a) ? 1 : 0;
+                    case 'XOR': return (a !== b) ? 1 : 0;
+                    case 'NAND': return (!(a && b)) ? 1 : 0;
+                    default: return 0;
+                }
+            }
+            return 0;
+        }
+
+        function checkCircuit() {
+            // Find Core Node
+            const coreNode = gameState.circuitData.nodes.find(n => n.type === 'CORE');
+            const result = getNodeValue(coreNode.id);
+            const coreEl = document.getElementById(coreNode.id).querySelector('.output-core');
+
+            // Update Visual Core
+            coreEl.textContent = result;
+            if (result === 1) {
+                coreEl.classList.add('output-active');
+                
+                // Success Effect
+                setTimeout(() => {
+                    alert(`LEVEL ${gameState.currentLevelIndex + 1} SELESAI! Logika Benar.`);
+                    gameState.score += 100 + (gameState.currentLevelIndex * 20);
+                    gameState.currentLevelIndex++;
+                    loadLevel(gameState.currentLevelIndex);
+                }, 500);
+            } else {
+                coreEl.classList.remove('output-active');
+                handleWrongAnswer();
+            }
+        }
+
+        function handleWrongAnswer() {
+            gameState.lives--;
+            updateHUD();
+            
+            // Visual Shake
+            const gameScreen = document.getElementById('game-screen');
+            gameScreen.style.transform = "translateX(10px)";
+            setTimeout(() => gameScreen.style.transform = "translateX(-10px)", 50);
+            setTimeout(() => gameScreen.style.transform = "translateX(0)", 100);
+
+            if (gameState.lives <= 0) {
+                endGame(false);
+            } else {
+                alert("Logika Salah! Output belum menyala (1). Coba kombinasi lain.");
+            }
+        }
+
+        function endGame(victory) {
+            switchScreen('end');
+            const title = document.getElementById('end-title');
+            title.textContent = victory ? "MISI SUKSES: SISTEM ONLINE" : "SISTEM GAGAL: ERROR CRITICAL";
+            title.style.color = victory ? "var(--neon-green)" : "var(--neon-pink)";
+
+            document.getElementById('end-name').textContent = gameState.playerName;
+            document.getElementById('end-class').textContent = gameState.playerClass;
+            document.getElementById('end-score').textContent = gameState.score;
+        }
+
+        function resetGame() {
+            switchScreen('start');
+        }
+
+        // --- CANVAS DRAWING LOOP (WIRES) ---
+        function drawLoop() {
+            if (!document.getElementById('game-screen').classList.contains('hidden')) {
+                resizeCanvas();
+                drawWires();
+            }
+            requestAnimationFrame(drawLoop);
+        }
+
+        function resizeCanvas() {
+            canvas.width = workspace.offsetWidth;
+            canvas.height = workspace.offsetHeight;
+        }
+
+        function drawWires() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (!gameState.circuitData) return;
+
+            gameState.circuitData.nodes.forEach(node => {
+                if (node.inputs) {
+                    // This node has inputs, draw lines TO this node FROM its inputs
+                    const targetEl = document.getElementById(node.id);
+                    if (!targetEl) return;
+                    
+                    const targetRect = targetEl.getBoundingClientRect();
+                    const workspaceRect = workspace.getBoundingClientRect();
+
+                    // Calculate center positions relative to workspace
+                    const tx = targetRect.left - workspaceRect.left;
+                    const ty = targetRect.top - workspaceRect.top + (targetRect.height / 2);
+
+                    node.inputs.forEach(inputId => {
+                        const sourceEl = document.getElementById(inputId);
+                        if (!sourceEl) return;
+                        
+                        const sourceRect = sourceEl.getBoundingClientRect();
+                        const sx = sourceRect.left - workspaceRect.left + sourceRect.width;
+                        const sy = sourceRect.top - workspaceRect.top + (sourceRect.height / 2);
+
+                        // Determine wire color based on logic state (Real-time simulation for visual feedback)
+                        const isActive = getNodeValue(inputId) === 1;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(sx, sy);
+                        
+                        // Bezier curve for nice wire look
+                        const cp1x = sx + (tx - sx) / 2;
+                        const cp1y = sy;
+                        const cp2x = sx + (tx - sx) / 2;
+                        const cp2y = ty;
+                        
+                        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, tx, ty);
+                        
+                        ctx.strokeStyle = isActive ? '#00ff41' : '#333';
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+
+                        // Glow effect
+                        if (isActive) {
+                            ctx.shadowBlur = 10;
+                            ctx.shadowColor = '#00ff41';
+                            ctx.stroke();
+                            ctx.shadowBlur = 0; // Reset
+                        }
+                    });
+                }
+            });
+        }
+
+        // Initialize empty
+    </script>
+</body>
+</html>

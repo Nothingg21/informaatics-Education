@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER-SORT: ALGORITMA PROTOCOL</title>
+    <style>
+        /* --- CORE VISUALS & RESET --- */
+        :root {
+            --neon-green: #0f0;
+            --neon-green-dim: rgba(0, 255, 0, 0.1);
+            --neon-cyan: #0ff;
+            --neon-pink: #f0f;
+            --neon-yellow: #ff0; /* Warna untuk Hint */
+            --dark-bg: #050505;
+            --panel-bg: #111;
+            --grid-line: #222;
+            --font-main: 'Courier New', Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark-bg);
+            color: var(--neon-green);
+            font-family: var(--font-main);
+            overflow: hidden; /* Mencegah scroll default */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- BACKGROUND EFFECTS (PURE CSS) --- */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .crt-flicker {
+            animation: flicker 0.15s infinite;
+            opacity: 0.95;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.98; }
+        }
+
+        /* --- SCREENS --- */
+        .screen {
+            display: none;
+            width: 95%;
+            max-width: 1000px;
+            height: 90vh;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-green);
+            box-shadow: 0 0 20px var(--neon-green-dim);
+            padding: 20px;
+            position: relative;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* --- TYPOGRAPHY & UI ELEMENTS --- */
+        h1, h2 {
+            text-shadow: 0 0 10px var(--neon-green);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        h1 { margin-bottom: 30px; font-size: 2.5rem; }
+
+        .btn {
+            background: transparent;
+            color: var(--neon-cyan);
+            border: 2px solid var(--neon-cyan);
+            padding: 15px 30px;
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 20px;
+            transition: 0.3s;
+            box-shadow: 0 0 5px var(--neon-cyan);
+        }
+
+        .btn:hover {
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        .btn-hint {
+            color: var(--neon-yellow);
+            border-color: var(--neon-yellow);
+            box-shadow: 0 0 5px var(--neon-yellow);
+        }
+        
+        .btn-hint:hover {
+            background: var(--neon-yellow);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-yellow);
+        }
+
+        .input-group {
+            margin: 15px 0;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--neon-pink);
+        }
+
+        .input-cyber {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 10px;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .input-cyber:focus {
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+
+        /* --- GAME HUD --- */
+        .hud {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--neon-green);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .hud-item span {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* --- CROSSWORD GRID --- */
+        .game-layout {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            height: 100%;
+            gap: 20px;
+        }
+
+        .crossword-container {
+            flex: 2;
+            display: grid;
+            /* Grid dinamis akan di-set via JS */
+            gap: 2px;
+            background-color: transparent;
+            padding: 10px;
+            overflow: auto;
+            justify-content: center;
+            align-content: center;
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            background: #000;
+            border: 1px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .cell.active {
+            border: 1px solid var(--neon-green);
+            box-shadow: inset 0 0 5px var(--neon-green);
+        }
+
+        .cell.focus {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid var(--neon-cyan);
+        }
+
+        .cell.correct {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .cell input {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            color: var(--neon-green);
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            text-align: center;
+            text-transform: uppercase;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .cell-number {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 0.6rem;
+            color: var(--neon-pink);
+            pointer-events: none;
+        }
+
+        /* --- INFO PANEL --- */
+        .info-panel {
+            flex: 1;
+            border-left: 1px solid var(--neon-green);
+            padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .clue-box {
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid var(--neon-green);
+            padding: 15px;
+            margin-bottom: 20px;
+            min-height: 100px;
+        }
+
+        .clue-title {
+            color: var(--neon-cyan);
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .controls {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column; /* Stack buttons */
+            gap: 10px;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .game-layout { flex-direction: column; }
+            .screen { height: 100vh; border: none; }
+            .cell { width: 30px; height: 30px; }
+            .cell input { font-size: 0.9rem; }
+            .info-panel { border-left: none; border-top: 1px solid var(--neon-green); padding-top: 10px; height: 35%; }
+            .controls { flex-direction: row; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Visual Overlays -->
+    <div class="scanlines"></div>
+
+    <div class="crt-flicker">
+        
+        <!-- 1. LAYAR AWAL -->
+        <div id="start-screen" class="screen active">
+            <h1 style="color: var(--neon-cyan);">CYBER SORT<br><span style="font-size: 0.5em; color: var(--neon-green);">// PROTOKOL ALGORITMA //</span></h1>
+            
+            <div style="text-align: center; margin-bottom: 20px; color: #888; max-width: 500px;">
+                <p>Selamat datang, Agen. Misi Anda adalah mendekripsi data algoritma pengurutan yang rusak.</p>
+                <p>Jawab teka-teki silang dengan benar untuk memulihkan sistem.</p>
+            </div>
+
+            <!-- Input Nama dan Kelas DIHAPUS sesuai permintaan -->
+
+            <button class="btn" onclick="startGame()">MULAI MISI</button>
+            <p style="margin-top: 20px; font-size: 0.8rem; color: #555;">Informatika Fase F - Kelas 12</p>
+        </div>
+
+        <!-- 2. GAMEPLAY UTAMA -->
+        <div id="game-screen" class="screen">
+            <div class="hud">
+                <div class="hud-item">AGEN: <span id="hud-name">RAHASIA</span></div>
+                <div class="hud-item">SKOR: <span id="hud-score" style="color: var(--neon-cyan);">0</span></div>
+                <div class="hud-item">INTEGRITAS: <span id="hud-lives" style="color: var(--neon-pink);">100%</span></div>
+            </div>
+
+            <div class="game-layout">
+                <div class="crossword-container" id="grid-container">
+                    <!-- Grid akan di-generate oleh JS -->
+                </div>
+
+                <div class="info-panel">
+                    <h3 style="border-bottom: 1px solid #333; padding-bottom: 5px;">DATA DECRYPTION</h3>
+                    <div class="clue-box">
+                        <div class="clue-title" id="clue-direction">MENUNGGU SELEKSI...</div>
+                        <div id="clue-text">Klik kotak pada grid untuk melihat petunjuk soal.</div>
+                    </div>
+                    
+                    <div style="flex-grow: 1; overflow-y: auto; font-size: 0.8rem; color: #888;">
+                        <p>> Selesaikan teka-teki silang.</p>
+                        <p>> Tiap jawaban benar: +100 Pts.</p>
+                        <p>> Jawaban salah: -10% Integritas.</p>
+                        <p>> Bantuan (Hint): -50 Pts.</p>
+                    </div>
+
+                    <div class="controls">
+                        <div style="display: flex; gap: 10px; width: 100%;">
+                            <button class="btn btn-hint" style="flex: 1; font-size: 0.9rem;" onclick="useHint()">BANTUAN (-50 PTS)</button>
+                            <button class="btn" style="flex: 1; font-size: 0.9rem;" onclick="checkAnswer()">VERIFIKASI</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. LAYAR AKHIR -->
+        <div id="end-screen" class="screen">
+            <h1 id="end-title">MISI SELESAI</h1>
+            
+            <div style="border: 1px solid var(--neon-green); padding: 20px; width: 80%; max-width: 400px; text-align: center; margin-bottom: 20px; background: rgba(0,255,0,0.05);">
+                <p>STATUS AGEN: <span style="color: #fff; font-weight: bold;">SELESAI</span></p>
+                <hr style="border-color: #333;">
+                <h2 style="margin: 10px 0;">SKOR AKHIR</h2>
+                <div id="end-score" style="font-size: 3rem; color: var(--neon-cyan); text-shadow: 0 0 15px var(--neon-cyan);">0</div>
+            </div>
+
+            <button class="btn" onclick="resetGame()">REBOOT SYSTEM</button>
+        </div>
+
+    </div>
+
+    <script>
+        /* --- GAME DATA & LOGIC --- */
+        
+        // Data Soal & Layout Grid (12x12)
+        const gridSize = 12;
+        
+        // REVISED DATA SOURCE (Layout Teka-Teki Silang)
+        const gameData = [
+            { id: 1, word: "BUBBLE", clue: "Metode sorting dengan menukar elemen bersebelahan berulang kali.", x: 1, y: 1, dir: "across" },
+            { id: 2, word: "MERGE", clue: "Algoritma Divide and Conquer: memecah lalu menggabungkan.", x: 5, y: 0, dir: "down" },
+            { id: 3, word: "STABLE", clue: "Sifat sorting: urutan data bernilai sama tidak berubah.", x: 2, y: 3, dir: "across" },
+            { id: 4, word: "INSERTION", clue: "Mirip mengurutkan kartu remi di tangan.", x: 0, y: 4, dir: "across" },
+            { id: 5, word: "SELECTION", clue: "Mencari nilai ekstrem (min/max) lalu ditempatkan di posisi tepat.", x: 2, y: 3, dir: "down" },
+            { id: 6, word: "PIVOT", clue: "Elemen acuan dalam Quick Sort.", x: 4, y: 8, dir: "across" },
+            { id: 7, word: "QUICK", clue: "Algoritma sorting tercepat secara rata-rata O(n log n).", x: 8, y: 4, dir: "down" },
+            { id: 8, word: "INDEX", clue: "Posisi elemen dalam array (dimulai dari 0 atau 1).", x: 2, y: 9, dir: "across" }
+        ];
+
+        let currentScore = 0;
+        let lives = 100;
+        let selectedWordId = null;
+        let gridMap = {}; // Maps "x,y" to cell element
+
+        /* --- INITIALIZATION --- */
+        function startGame() {
+            // Langsung mulai tanpa cek nama
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('game-screen').classList.add('active');
+
+            initGrid();
+        }
+
+        function initGrid() {
+            const container = document.getElementById('grid-container');
+            container.style.gridTemplateColumns = `repeat(${gridSize}, 40px)`;
+            container.style.gridTemplateRows = `repeat(${gridSize}, 40px)`;
+            container.innerHTML = '';
+            gridMap = {};
+
+            // 1. Create Empty Grid
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    let cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    cell.id = `cell-${x}-${y}`;
+                    
+                    // Input element
+                    let input = document.createElement('input');
+                    input.maxLength = 1;
+                    input.disabled = true; 
+                    input.dataset.x = x;
+                    input.dataset.y = y;
+                    
+                    // Event Listeners
+                    input.addEventListener('focus', () => handleCellFocus(x, y));
+                    input.addEventListener('input', (e) => handleInput(e, x, y));
+                    input.addEventListener('keydown', (e) => handleKey(e, x, y));
+                    input.addEventListener('click', () => handleCellClick(x,y));
+
+                    cell.appendChild(input);
+                    container.appendChild(cell);
+                    gridMap[`${x},${y}`] = { el: cell, input: input, words: [] };
+                }
+            }
+
+            // 2. Map Words to Grid
+            gameData.forEach(wordObj => {
+                let cx = wordObj.x;
+                let cy = wordObj.y;
+                
+                // Add number indicator
+                let startCell = gridMap[`${cx},${cy}`].el;
+                if (!startCell.querySelector('.cell-number')) {
+                    let num = document.createElement('span');
+                    num.className = 'cell-number';
+                    num.innerText = wordObj.id;
+                    startCell.appendChild(num);
+                }
+
+                for (let i = 0; i < wordObj.word.length; i++) {
+                    let cellData = gridMap[`${cx},${cy}`];
+                    
+                    cellData.el.classList.add('active');
+                    cellData.input.disabled = false;
+                    cellData.words.push(wordObj.id); 
+
+                    if (wordObj.dir === "across") cx++;
+                    else cy++;
+                }
+            });
+        }
+
+        /* --- INTERACTION --- */
+        function handleCellClick(x, y) {
+            const cellData = gridMap[`${x},${y}`];
+            if (cellData.words.length > 0) {
+                let newWordId = cellData.words[0];
+                if (cellData.words.length > 1 && selectedWordId === cellData.words[0]) {
+                    newWordId = cellData.words[1];
+                }
+                selectWord(newWordId);
+            }
+        }
+
+        function handleCellFocus(x, y) {
+            // Triggered when input gets focus
+        }
+
+        function selectWord(wordId) {
+            selectedWordId = wordId;
+            const wordData = gameData.find(w => w.id === wordId);
+
+            document.getElementById('clue-direction').innerText = `DATA #${wordId} (${wordData.dir.toUpperCase()})`;
+            document.getElementById('clue-text').innerText = wordData.clue;
+
+            document.querySelectorAll('.cell').forEach(c => c.classList.remove('focus'));
+            
+            let cx = wordData.x;
+            let cy = wordData.y;
+            for(let i=0; i<wordData.word.length; i++) {
+                let cell = gridMap[`${cx},${cy}`].el;
+                cell.classList.add('focus');
+                if (wordData.dir === "across") cx++; else cy++;
+            }
+        }
+
+        function handleInput(e, x, y) {
+            const val = e.target.value.toUpperCase();
+            e.target.value = val;
+
+            if (val && selectedWordId) {
+                const wordData = gameData.find(w => w.id === selectedWordId);
+                let nextX = x;
+                let nextY = y;
+                
+                if (wordData.dir === "across") nextX++;
+                else nextY++;
+
+                const nextCell = gridMap[`${nextX},${nextY}`];
+                if (nextCell && nextCell.input && !nextCell.input.disabled) {
+                    nextCell.input.focus();
+                }
+            }
+        }
+
+        function handleKey(e, x, y) {
+            if (e.key === "Backspace" && e.target.value === "") {
+                 if (selectedWordId) {
+                    const wordData = gameData.find(w => w.id === selectedWordId);
+                    let prevX = x;
+                    let prevY = y;
+                    
+                    if (wordData.dir === "across") prevX--;
+                    else prevY--;
+
+                    const prevCell = gridMap[`${prevX},${prevY}`];
+                    if (prevCell && prevCell.input && !prevCell.input.disabled) {
+                        prevCell.input.focus();
+                    }
+                }
+            }
+        }
+
+        /* --- GAME LOGIC & HINT SYSTEM --- */
+        
+        function useHint() {
+            if (!selectedWordId) {
+                alert(">> SYSTEM ALERT: Pilih kotak kata terlebih dahulu untuk menggunakan bantuan.");
+                return;
+            }
+
+            const wordData = gameData.find(w => w.id === selectedWordId);
+            let cx = wordData.x;
+            let cy = wordData.y;
+            let emptyOrWrongCells = [];
+
+            // Cari sel yang masih kosong atau salah
+            for (let i = 0; i < wordData.word.length; i++) {
+                let cellData = gridMap[`${cx},${cy}`];
+                let currentVal = cellData.input.value.toUpperCase();
+                let correctVal = wordData.word[i];
+
+                if (!cellData.input.readOnly && currentVal !== correctVal) {
+                    emptyOrWrongCells.push({ x: cx, y: cy, char: correctVal });
+                }
+
+                if (wordData.dir === "across") cx++; else cy++;
+            }
+
+            if (emptyOrWrongCells.length === 0) {
+                alert(">> SYSTEM INFO: Semua kotak pada kata ini sudah terisi atau sudah benar.");
+                return;
+            }
+
+            // Terapkan penalti
+            currentScore -= 50;
+            document.getElementById('hud-score').innerText = currentScore;
+
+            // Pilih satu sel acak untuk diisi
+            const target = emptyOrWrongCells[Math.floor(Math.random() * emptyOrWrongCells.length)];
+            const cellEl = gridMap[`${target.x},${target.y}`];
+            
+            cellEl.input.value = target.char;
+            cellEl.el.classList.add('correct'); // Optional: mark as hinted color? using correct for now
+            // Jangan di-lock (readOnly) agar player masih bisa "merasa" mengetik sisanya, 
+            // atau lock jika ingin memastikan tidak diganti lagi.
+            // Mari kita biarkan terbuka tapi visualnya sudah dikasih tau.
+            
+            // Visual feedback singkat pada cell
+            cellEl.el.style.backgroundColor = "var(--neon-yellow)";
+            setTimeout(() => {
+                cellEl.el.style.backgroundColor = "";
+            }, 500);
+        }
+
+        function checkAnswer() {
+            if (!selectedWordId) return;
+
+            const wordData = gameData.find(w => w.id === selectedWordId);
+            let userAnswer = "";
+            let cx = wordData.x;
+            let cy = wordData.y;
+
+            // Collect letters
+            for (let i = 0; i < wordData.word.length; i++) {
+                userAnswer += gridMap[`${cx},${cy}`].input.value.toUpperCase();
+                if (wordData.dir === "across") cx++; else cy++;
+            }
+
+            if (userAnswer === wordData.word) {
+                // Correct
+                markWordCorrect(wordData);
+                currentScore += 100;
+                document.getElementById('hud-score').innerText = currentScore;
+                
+                alert(">> ACCESS GRANTED: Kata Terverifikasi.");
+
+                checkWinCondition();
+            } else {
+                // Incorrect
+                lives -= 10;
+                document.getElementById('hud-lives').innerText = lives + "%";
+                alert(">> ACCESS DENIED: Data Korup/Salah.");
+                
+                if (lives <= 0) {
+                    endGame(false);
+                }
+            }
+        }
+
+        function markWordCorrect(wordData) {
+            let cx = wordData.x;
+            let cy = wordData.y;
+            for (let i = 0; i < wordData.word.length; i++) {
+                let cell = gridMap[`${cx},${cy}`].el;
+                cell.classList.add('correct');
+                gridMap[`${cx},${cy}`].input.readOnly = true; // Lock cell
+                if (wordData.dir === "across") cx++; else cy++;
+            }
+        }
+
+        function checkWinCondition() {
+            let allCorrect = true;
+            document.querySelectorAll('.cell.active').forEach(c => {
+                if (!c.classList.contains('correct')) allCorrect = false;
+            });
+
+            if (allCorrect) {
+                endGame(true);
+            }
+        }
+
+        function endGame(win) {
+            document.getElementById('game-screen').classList.remove('active');
+            document.getElementById('end-screen').classList.add('active');
+            document.getElementById('end-score').innerText = currentScore;
+            
+            const title = document.getElementById('end-title');
+            if (win) {
+                title.innerText = "SYSTEM SECURED";
+                title.style.color = "var(--neon-green)";
+            } else {
+                title.innerText = "SYSTEM FAILURE";
+                title.style.color = "red";
+            }
+        }
+
+        function resetGame() {
+            currentScore = 0;
+            lives = 100;
+            selectedWordId = null;
+            document.getElementById('hud-score').innerText = "0";
+            document.getElementById('hud-lives').innerText = "100%";
+            
+            document.getElementById('end-screen').classList.remove('active');
+            document.getElementById('start-screen').classList.add('active');
+        }
+
+    </script>
+</body>
+</html>

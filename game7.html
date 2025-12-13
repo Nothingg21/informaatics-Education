@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Architect: Cyber Core</title>
+    <style>
+        /* --- RESET & BASE STYLES --- */
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --neon-green: #0aff0a;
+            --dark-bg: #050510;
+            --panel-bg: rgba(10, 10, 20, 0.85);
+            --grid-color: rgba(0, 243, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- BACKGROUND CANVAS --- */
+        #bgCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- UI CONTAINERS --- */
+        .screen {
+            display: none;
+            width: 90%;
+            max-width: 800px;
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 20px var(--neon-blue), inset 0 0 20px rgba(0, 243, 255, 0.2);
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            position: relative;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* --- TYPOGRAPHY --- */
+        h1 {
+            font-size: 2.5rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 5px var(--neon-pink);
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #ddd;
+        }
+
+        /* --- FORMS & INPUTS --- */
+        .input-group {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--neon-green);
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            font-size: 1.2rem;
+            outline: none;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+        input[type="text"]:focus {
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        /* --- BUTTONS --- */
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: var(--dark-bg);
+            background: var(--neon-blue);
+            border: none;
+            cursor: pointer;
+            border-radius: 2px;
+            position: relative;
+            transition: 0.3s;
+            clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%);
+        }
+
+        .btn:hover {
+            background: white;
+            box-shadow: 0 0 20px white;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--neon-pink);
+        }
+
+        /* --- GAMEPLAY ELEMENTS --- */
+        .hud-panel {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            border-bottom: 1px solid var(--neon-blue);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .stat-box {
+            font-size: 1rem;
+        }
+
+        .stat-value {
+            color: var(--neon-green);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .target-display {
+            background: rgba(0,0,0,0.8);
+            border: 2px dashed var(--neon-pink);
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+        }
+
+        .target-number {
+            font-size: 4rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 20px var(--neon-pink);
+        }
+
+        .target-label {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        /* --- BINARY BUILDER AREA --- */
+        .builder-area {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .bit-module {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .bit-module:hover {
+            transform: scale(1.05);
+        }
+
+        /* Representasi Visual Switch/Bit */
+        .bit-switch {
+            width: 60px;
+            height: 80px;
+            background: #111;
+            border: 2px solid #333;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 5px;
+            position: relative;
+            box-shadow: inset 0 0 10px #000;
+            transition: 0.3s;
+        }
+
+        /* Style saat Bit Aktif (1) */
+        .bit-module.active .bit-switch {
+            border-color: var(--neon-blue);
+            background: rgba(0, 243, 255, 0.2);
+            box-shadow: 0 0 15px var(--neon-blue), inset 0 0 10px var(--neon-blue);
+        }
+
+        .bit-value-label {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .bit-state {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .bit-module.active .bit-state {
+            color: white;
+            text-shadow: 0 0 10px white;
+        }
+
+        .current-sum-display {
+            font-size: 1.5rem;
+            margin-top: 10px;
+        }
+
+        .current-sum-val {
+            color: var(--neon-blue);
+        }
+
+        /* --- FEEDBACK MESSAGES --- */
+        #message-area {
+            height: 30px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .correct { color: var(--neon-green); }
+        .wrong { color: var(--neon-pink); }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .bit-switch { width: 40px; height: 50px; }
+            .bit-state { font-size: 1.2rem; }
+            .target-number { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BACKGROUND ANIMATION CANVAS -->
+    <canvas id="bgCanvas"></canvas>
+
+    <!-- 1. START SCREEN -->
+    <div id="start-screen" class="screen active">
+        <h1>Binary Architect<br><span style="font-size:0.6em; color:white;">Cyber Core Edition</span></h1>
+        <p>Sistem Inti mengalami kegagalan daya! Sebagai arsitek, tugas Anda adalah menyusun ulang paket data biner untuk mengembalikan frekuensi Desimal yang hilang.</p>
+        
+        <div style="margin-bottom: 2rem; color: var(--neon-green); font-weight: bold;">
+            STATUS: MENUNGGU AGEN...
+        </div>
+
+        <button class="btn" onclick="startGame()">MULAI MISI</button>
+    </div>
+
+    <!-- 2. GAME SCREEN (BUILDING MODE) -->
+    <div id="game-screen" class="screen">
+        <div class="hud-panel">
+            <div class="stat-box">AGEN: <span id="hud-name" class="stat-value">---</span></div>
+            <div class="stat-box">KELAS: <span id="hud-class" class="stat-value">---</span></div>
+            <div class="stat-box">NYAWA: <span id="hud-lives" class="stat-value" style="color:var(--neon-pink)">3</span></div>
+            <div class="stat-box">SKOR: <span id="hud-score" class="stat-value">0</span></div>
+        </div>
+
+        <div class="target-display">
+            <div class="target-label">TARGET FREKUENSI (DESIMAL)</div>
+            <div class="target-number" id="target-number">0</div>
+        </div>
+
+        <p style="font-size: 0.9rem;">Aktifkan modul bit di bawah untuk membangun angka target:</p>
+
+        <!-- Builder Area: Tempat siswa "membangun" angka biner -->
+        <div class="builder-area" id="bit-container">
+            <!-- Bit modules generated by JS -->
+        </div>
+
+        <div class="current-sum-display">
+            TOTAL SAAT INI: <span id="current-sum" class="current-sum-val">0</span>
+        </div>
+
+        <div id="message-area"></div>
+
+        <button class="btn" onclick="submitAnswer()">SUBMIT DATA</button>
+    </div>
+
+    <!-- 3. END SCREEN -->
+    <div id="end-screen" class="screen">
+        <h1 style="color: var(--neon-pink)">MISI SELESAI</h1>
+        <h2 id="end-message">Sistem Offline</h2>
+        
+        <div style="margin: 2rem 0; text-align: left; display: inline-block;">
+            <p>Nama: <span id="end-name" style="color:var(--neon-blue)">-</span></p>
+            <p>Kelas: <span id="end-class" style="color:var(--neon-blue)">-</span></p>
+            <p style="font-size: 1.5rem; margin-top:1rem;">SKOR AKHIR: <span id="end-score" style="color:var(--neon-green)">0</span></p>
+        </div>
+
+        <button class="btn btn-secondary" onclick="restartGame()">MAIN LAGI</button>
+    </div>
+
+    <script>
+        /* --- GAME LOGIC & STATE --- */
+        const gameState = {
+            playerName: "",
+            playerClass: "",
+            score: 0,
+            lives: 3,
+            targetNumber: 0,
+            currentSum: 0,
+            activeBits: [0, 0, 0, 0, 0, 0, 0, 0], // Representasi 8 bit (128 - 1)
+            bitValues: [128, 64, 32, 16, 8, 4, 2, 1]
+        };
+
+        // Audio Effects (Synthesized using Web Audio API for no external files)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'click') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'success') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'fail') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        /* --- DOM ELEMENTS --- */
+        const screens = {
+            start: document.getElementById('start-screen'),
+            game: document.getElementById('game-screen'),
+            end: document.getElementById('end-screen')
+        };
+        const bitContainer = document.getElementById('bit-container');
+        const messageArea = document.getElementById('message-area');
+
+        /* --- INITIALIZATION --- */
+        function switchScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.remove('active'));
+            screens[screenName].classList.add('active');
+        }
+
+        function startGame() {
+            // Menggunakan nilai default karena input dihapus
+            const name = "AGEN-01";
+            const pClass = "OPERATOR";
+
+            gameState.playerName = name;
+            gameState.playerClass = pClass;
+            gameState.score = 0;
+            gameState.lives = 3;
+
+            // Update HUD
+            document.getElementById('hud-name').textContent = name;
+            document.getElementById('hud-class').textContent = pClass;
+            updateStatsUI();
+
+            createBitBuilderUI();
+            switchScreen('game');
+            generateNewProblem();
+            playSound('success');
+        }
+
+        /* --- CORE GAMEPLAY MECHANICS --- */
+        
+        // Membuat UI untuk 8 bit toggle
+        function createBitBuilderUI() {
+            bitContainer.innerHTML = '';
+            gameState.bitValues.forEach((val, index) => {
+                const module = document.createElement('div');
+                module.className = 'bit-module';
+                module.dataset.index = index;
+                module.dataset.value = val;
+                module.onclick = () => toggleBit(index);
+
+                // Struktur Visual Bit
+                module.innerHTML = `
+                    <div class="bit-switch">
+                        <span class="bit-state" id="bit-text-${index}">0</span>
+                    </div>
+                    <span class="bit-value-label">${val}</span>
+                `;
+                bitContainer.appendChild(module);
+            });
+        }
+
+        function generateNewProblem() {
+            // Reset status bit
+            gameState.activeBits.fill(0);
+            gameState.currentSum = 0;
+            
+            // Generate angka random 1 - 255
+            // Untuk pemula, kita bisa mulai dengan angka yang lebih mudah, tapi ini untuk kelas 12
+            gameState.targetNumber = Math.floor(Math.random() * 255) + 1;
+            
+            document.getElementById('target-number').textContent = gameState.targetNumber;
+            messageArea.textContent = "";
+            renderBits();
+        }
+
+        function toggleBit(index) {
+            playSound('click');
+            // Toggle 0 ke 1 atau 1 ke 0
+            gameState.activeBits[index] = gameState.activeBits[index] === 0 ? 1 : 0;
+            
+            // Hitung ulang total
+            calculateSum();
+            renderBits();
+        }
+
+        function calculateSum() {
+            let sum = 0;
+            gameState.activeBits.forEach((bit, index) => {
+                if (bit === 1) {
+                    sum += gameState.bitValues[index];
+                }
+            });
+            gameState.currentSum = sum;
+            document.getElementById('current-sum').textContent = sum;
+        }
+
+        function renderBits() {
+            const modules = document.querySelectorAll('.bit-module');
+            modules.forEach((mod, index) => {
+                const isActive = gameState.activeBits[index] === 1;
+                const stateText = document.getElementById(`bit-text-${index}`);
+                
+                if (isActive) {
+                    mod.classList.add('active');
+                    stateText.textContent = "1";
+                } else {
+                    mod.classList.remove('active');
+                    stateText.textContent = "0";
+                }
+            });
+        }
+
+        function submitAnswer() {
+            if (gameState.currentSum === gameState.targetNumber) {
+                // Jawaban Benar
+                playSound('success');
+                gameState.score += 100 + (gameState.lives * 10); // Bonus poin
+                messageArea.textContent = "SISTEM TERHUBUNG! +100 Poin";
+                messageArea.className = "correct";
+                
+                updateStatsUI();
+                
+                // Delay sedikit sebelum soal baru
+                setTimeout(generateNewProblem, 1000);
+            } else {
+                // Jawaban Salah
+                playSound('fail');
+                gameState.lives--;
+                messageArea.textContent = "DATA KORUP! Frekuensi tidak cocok.";
+                messageArea.className = "wrong";
+                
+                updateStatsUI();
+
+                if (gameState.lives <= 0) {
+                    setTimeout(endGame, 1000);
+                }
+            }
+        }
+
+        function updateStatsUI() {
+            document.getElementById('hud-score').textContent = gameState.score;
+            document.getElementById('hud-lives').textContent = gameState.lives;
+        }
+
+        function endGame() {
+            switchScreen('end');
+            document.getElementById('end-name').textContent = gameState.playerName;
+            document.getElementById('end-class').textContent = gameState.playerClass;
+            document.getElementById('end-score').textContent = gameState.score;
+            
+            const endMsg = document.getElementById('end-message');
+            if (gameState.score >= 500) {
+                endMsg.textContent = "SISTEM PULIH - KINERJA SANGAT BAIK";
+                endMsg.style.color = "var(--neon-green)";
+            } else {
+                endMsg.textContent = "KEGAGALAN SISTEM TOTAL";
+                endMsg.style.color = "var(--neon-pink)";
+            }
+        }
+
+        function restartGame() {
+            switchScreen('start');
+        }
+
+        /* --- VISUAL EFFECTS (CANVAS) --- */
+        // Membuat efek latar belakang grid bergerak ala Cyberpunk
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let gridOffset = 0;
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        function drawGrid() {
+            ctx.fillStyle = '#050510'; // Dark BG
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.strokeStyle = 'rgba(0, 243, 255, 0.15)'; // Neon blue low opacity
+            ctx.lineWidth = 1;
+
+            const gridSize = 40;
+            const perspectiveY = height / 3; // Horizon line
+
+            // Vertical lines (Perspektif)
+            const centerX = width / 2;
+            for (let i = -width; i < width * 2; i += gridSize * 2) {
+                ctx.beginPath();
+                ctx.moveTo(i, height);
+                ctx.lineTo(centerX + (i - centerX) * 0.2, perspectiveY);
+                ctx.stroke();
+            }
+
+            // Horizontal moving lines
+            gridOffset = (gridOffset + 0.5) % gridSize;
+            
+            for (let y = height; y > perspectiveY; y -= gridSize * 0.5) {
+                // Membuat efek jarak semakin rapat ke atas
+                let yPos = y + gridOffset; 
+                // Simple horizontal lines
+                ctx.beginPath();
+                ctx.moveTo(0, yPos);
+                ctx.lineTo(width, yPos);
+                ctx.stroke();
+            }
+
+            // Efek Scanline
+            ctx.fillStyle = "rgba(255, 255, 255, 0.02)";
+            ctx.fillRect(0, Math.random() * height, width, 2);
+
+            requestAnimationFrame(drawGrid);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        drawGrid();
+
+    </script>
+</body>
+</html>

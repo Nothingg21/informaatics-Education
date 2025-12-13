@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER-ARCHITECT: Logic Repair</title>
+    <style>
+        /* --- RESET & DASAR --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+        }
+
+        body {
+            background-color: #050505;
+            color: #0ff; /* Cyan Cyberpunk */
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- LATAR BELAKANG ANIMASI (CANVAS) --- */
+        #bgCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            width: 100%;
+            height: 100%;
+            opacity: 0.6;
+        }
+
+        /* --- SCANLINE EFFECT --- */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* --- CONTAINER UTAMA --- */
+        #game-container {
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            background: rgba(10, 10, 16, 0.85);
+            border: 2px solid #0ff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2), inset 0 0 50px rgba(0, 255, 255, 0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        /* --- SCREEN MANAGEMENT --- */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* --- TYPOGRAPHY & ELEMENTS --- */
+        h1 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            color: #f0f; /* Magenta */
+            text-shadow: 2px 2px #0ff;
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+            position: relative;
+        }
+
+        h2 {
+            color: #0ff;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #0ff;
+            padding-bottom: 5px;
+            width: 100%;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        /* --- INPUT FIELDS (CYBER STYLE) --- */
+        .input-group {
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 400px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            color: #0ff;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #0ff;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            box-shadow: 0 0 15px #0ff;
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        /* --- BUTTONS --- */
+        .btn {
+            background: transparent;
+            color: #0ff;
+            border: 2px solid #0ff;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+            margin-top: 20px;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+        }
+
+        .btn:hover {
+            background: #0ff;
+            color: #000;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* --- GAME UI --- */
+        #game-ui {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid #f0f;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.7rem;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* --- CODE EDITOR AREA (The Broken Module) --- */
+        .code-display {
+            background: #1a1a1a;
+            border-left: 5px solid #f0f;
+            padding: 20px;
+            width: 100%;
+            text-align: left;
+            font-family: 'Consolas', monospace;
+            color: #d4d4d4;
+            white-space: pre-wrap;
+            position: relative;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .line-num {
+            color: #555;
+            margin-right: 10px;
+            user-select: none;
+        }
+
+        .bug-highlight {
+            background: rgba(255, 0, 0, 0.3);
+            border-bottom: 2px wavy red;
+            color: #fff;
+            padding: 0 5px;
+            animation: pulseError 1.5s infinite;
+        }
+
+        /* --- BUILD AREA (Answer Choices) --- */
+        .build-area {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .module-card {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid #0ff;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+            position: relative;
+        }
+
+        .module-card:hover {
+            background: rgba(0, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.2);
+        }
+
+        .module-card h3 {
+            font-size: 0.8rem;
+            color: #f0f;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .module-card code {
+            display: block;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        /* --- FEEDBACK OVERLAY --- */
+        #feedback-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none; /* Flex when active */
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 50;
+            backdrop-filter: blur(8px);
+        }
+        
+        .feedback-content {
+            padding: 30px;
+            border: 3px solid #fff;
+            background: #000;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(255,255,255,0.5);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseError {
+            0% { background: rgba(255, 0, 0, 0.3); }
+            50% { background: rgba(255, 0, 0, 0.6); }
+            100% { background: rgba(255, 0, 0, 0.3); }
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .glitch-text {
+            position: relative;
+        }
+        
+        .glitch-text::before, .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -1px 0 red;
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: -1px 0 blue;
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(10px, 9999px, 30px, 0); }
+            20% { clip: rect(80px, 9999px, 100px, 0); }
+            40% { clip: rect(10px, 9999px, 60px, 0); }
+            60% { clip: rect(50px, 9999px, 90px, 0); }
+            80% { clip: rect(20px, 9999px, 50px, 0); }
+            100% { clip: rect(70px, 9999px, 120px, 0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(60px, 9999px, 90px, 0); }
+            20% { clip: rect(10px, 9999px, 50px, 0); }
+            40% { clip: rect(80px, 9999px, 100px, 0); }
+            60% { clip: rect(30px, 9999px, 60px, 0); }
+            80% { clip: rect(70px, 9999px, 120px, 0); }
+            100% { clip: rect(20px, 9999px, 40px, 0); }
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 600px) {
+            .build-area {
+                grid-template-columns: 1fr;
+            }
+            h1 { font-size: 1.8rem; }
+            #game-container { width: 95%; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- VISUAL BACKGROUND -->
+    <canvas id="bgCanvas"></canvas>
+    <div class="scanlines"></div>
+
+    <!-- MAIN GAME CONTAINER -->
+    <div id="game-container">
+        
+        <!-- 1. LAYAR AWAL -->
+        <div id="screen-start" class="screen active">
+            <h1 class="glitch-text" data-text="CYBER-ARCHITECT">CYBER-ARCHITECT</h1>
+            <p>SYSTEM FAILURE DETECTED. INITIATE REPAIRS IMMEDIATELY.</p>
+            
+            <!-- Input fields removed for instant play -->
+
+            <button class="btn" onclick="startGame()">[ INITIATE SYSTEM ]</button>
+        </div>
+
+        <!-- 2. GAMEPLAY UTAMA -->
+        <div id="screen-game" class="screen">
+            <!-- UI ATAS -->
+            <div id="game-ui">
+                <div class="stat-box">
+                    <span class="stat-label">AGENT</span>
+                    <span class="stat-value" id="disp-name">USER</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">SCORE</span>
+                    <span class="stat-value" id="disp-score">000</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">INTEGRITY (LIVES)</span>
+                    <span class="stat-value" style="color:#f0f;" id="disp-lives">♥♥♥</span>
+                </div>
+            </div>
+
+            <!-- AREA SOAL -->
+            <h2>MODULE REPAIR <span id="q-number" style="font-size:0.8em; color:#888;">(1/5)</span></h2>
+            <p style="font-size: 0.9rem; text-align: left; margin-bottom: 10px;">
+                <span style="color:#f0f;">[ERROR LOG]:</span> <span id="bug-desc">Deskripsi error akan muncul di sini.</span>
+            </p>
+            
+            <div class="code-display" id="code-block">
+                <!-- Kode soal akan di-inject lewat JS -->
+            </div>
+
+            <p style="font-size: 0.8rem; margin-bottom: 10px;">> PILIH MODUL PATCH YANG TEPAT:</p>
+            
+            <!-- PILIHAN JAWABAN -->
+            <div class="build-area" id="answers-container">
+                <!-- Tombol jawaban di-inject lewat JS -->
+            </div>
+        </div>
+
+        <!-- 3. LAYAR AKHIR -->
+        <div id="screen-end" class="screen">
+            <h1 id="end-title" class="glitch-text" data-text="MISSION COMPLETE">MISSION COMPLETE</h1>
+            <div style="border: 1px solid #0ff; padding: 20px; width: 100%; margin-bottom: 20px; background: rgba(0,0,0,0.5);">
+                <p>REPORT STATUS:</p>
+                <h2 style="font-size: 3rem; border:none; margin:0;" id="final-score">0</h2>
+                <p style="margin-top:10px;">AGENT: <span id="final-name" style="color:#fff;">-</span></p>
+                <p>CLASS: <span id="final-class" style="color:#fff;">-</span></p>
+            </div>
+            <button class="btn" onclick="resetGame()">[ REBOOT SYSTEM ]</button>
+        </div>
+
+        <!-- FEEDBACK OVERLAY (Correct/Wrong) -->
+        <div id="feedback-overlay">
+            <div class="feedback-content" id="feedback-box">
+                <h2 id="fb-title" style="border:none;">PATCH APPLIED</h2>
+                <p id="fb-msg">System Stabilized.</p>
+                <button class="btn" style="padding: 10px 20px; font-size: 1rem;" onclick="closeFeedback()">CONTINUE >></button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* --- GAME DATA (SOAL INFORMATIKA) --- */
+        const questions = [
+            {
+                id: 1,
+                topic: "Looping (Perulangan)",
+                desc: "Sistem mengalami hang (Infinite Loop). Program tidak pernah berhenti mencetak angka.",
+                codePre: "i = 0\nwhile i < 5:\n    print(i)\n    ",
+                codeError: "MISSING_INCREMENT_CODE", 
+                codePost: "",
+                options: [
+                    { label: "Modul A", code: "i = i - 1", correct: false },
+                    { label: "Modul B", code: "i = i + 1", correct: true }, // Jawaban Benar
+                    { label: "Modul C", code: "break", correct: false },
+                    { label: "Modul D", code: "pass", correct: false }
+                ],
+                explanation: "Loop 'while' membutuhkan increment (i = i + 1) agar kondisi 'i < 5' akhirnya menjadi False. Tanpa ini, loop berjalan selamanya."
+            },
+            {
+                id: 2,
+                topic: "Array / List Index",
+                desc: "IndexError terdeteksi. Sistem mencoba mengakses data di luar kapasitas memori.",
+                codePre: "data_user = ['Admin', 'Guest', 'User']\n# Ingin mengambil elemen terakhir ('User')\ncurrent_user = ",
+                codeError: "data_user[3]",
+                codePost: "\nprint(current_user)",
+                options: [
+                    { label: "Patch A", code: "data_user[2]", correct: true }, // Jawaban Benar (Index 0,1,2)
+                    { label: "Patch B", code: "data_user[3]", correct: false },
+                    { label: "Patch C", code: "data_user[1]", correct: false },
+                    { label: "Patch D", code: "data_user[0]", correct: false }
+                ],
+                explanation: "List memiliki 3 item. Index dimulai dari 0. Maka item terakhir ada di index 2, bukan 3."
+            },
+            {
+                id: 3,
+                topic: "Conditional Logic",
+                desc: "Validasi gagal. Logika 'OR' menyebabkan celah keamanan di mana kedua syarat seharusnya wajib dipenuhi.",
+                codePre: "username = get_input()\npassword = get_input()\n\n# Login harus nama DAN password benar\nif ",
+                codeError: "username == 'admin' or password == '1234':",
+                codePost: "\n    grant_access()",
+                options: [
+                    { label: "Logic Unit A", code: "username = 'admin' and password = '1234':", correct: false }, // Salah operator
+                    { label: "Logic Unit B", code: "username == 'admin' or password == '1234':", correct: false },
+                    { label: "Logic Unit C", code: "username == 'admin' and password == '1234':", correct: true }, // Jawaban Benar
+                    { label: "Logic Unit D", code: "username != 'admin' and password != '1234':", correct: false }
+                ],
+                explanation: "Gunakan 'and' agar kedua kondisi (username benar DAN password benar) harus terpenuhi untuk login."
+            },
+            {
+                id: 4,
+                topic: "Function Return",
+                desc: "Fungsi menghitung total, tetapi hasilnya 'None' saat dipanggil.",
+                codePre: "def hitung_total(a, b):\n    hasil = a + b\n    ",
+                codeError: "# Missing Return",
+                codePost: "\n\nskor = hitung_total(10, 20)\nprint(skor)",
+                options: [
+                    { label: "Syntax A", code: "print(hasil)", correct: false },
+                    { label: "Syntax B", code: "return hasil", correct: true }, // Jawaban Benar
+                    { label: "Syntax C", code: "input(hasil)", correct: false },
+                    { label: "Syntax D", code: "hasil = 0", correct: false }
+                ],
+                explanation: "Agar nilai hasil perhitungan bisa digunakan di luar fungsi, fungsi harus mengembalikan nilai menggunakan 'return'."
+            },
+            {
+                id: 5,
+                topic: "Variable Scope / Typo",
+                desc: "NameError: Variabel tidak dikenali karena perbedaan penulisan huruf besar/kecil (Case Sensitivity).",
+                codePre: "TotalBelanja = 50000\ndiskon = 5000\n\n# Hitung bayar\nharga_akhir = ",
+                codeError: "totalbelanja - diskon",
+                codePost: "\nprint(harga_akhir)",
+                options: [
+                    { label: "Var Fix A", code: "TotalBelanja - diskon", correct: true }, // Jawaban Benar
+                    { label: "Var Fix B", code: "TotalBelanja + diskon", correct: false },
+                    { label: "Var Fix C", code: "totalBelanja - Diskon", correct: false },
+                    { label: "Var Fix D", code: "50000 - 5000", correct: false } // Hardcode bad practice
+                ],
+                explanation: "Python bersifat Case Sensitive. 'TotalBelanja' tidak sama dengan 'totalbelanja'. Harus persis sama."
+            }
+        ];
+
+        /* --- GAME STATE VARIABLES --- */
+        let state = {
+            playerName: "",
+            playerClass: "",
+            score: 0,
+            lives: 3,
+            currentQuestionIdx: 0,
+            isGameOver: false
+        };
+
+        /* --- DOM ELEMENTS --- */
+        const screens = {
+            start: document.getElementById('screen-start'),
+            game: document.getElementById('screen-game'),
+            end: document.getElementById('screen-end')
+        };
+        // Inputs object removed as elements no longer exist
+        
+        const displays = {
+            name: document.getElementById('disp-name'),
+            score: document.getElementById('disp-score'),
+            lives: document.getElementById('disp-lives'),
+            qNum: document.getElementById('q-number'),
+            bugDesc: document.getElementById('bug-desc'),
+            codeBlock: document.getElementById('code-block'),
+            answers: document.getElementById('answers-container'),
+            finalScore: document.getElementById('final-score'),
+            finalName: document.getElementById('final-name'),
+            finalClass: document.getElementById('final-class'),
+            endTitle: document.getElementById('end-title')
+        };
+        const feedback = {
+            overlay: document.getElementById('feedback-overlay'),
+            box: document.getElementById('feedback-box'),
+            title: document.getElementById('fb-title'),
+            msg: document.getElementById('fb-msg')
+        };
+
+        /* --- BACKGROUND CANVAS ANIMATION --- */
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Resize canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Matrix / Grid Effect
+        let frame = 0;
+        function animateBg() {
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.1)'; // Fade effect
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            
+            // Draw moving grid
+            const gridSize = 50;
+            const offset = frame % gridSize;
+            
+            // Vertical lines
+            for(let x = 0; x < canvas.width; x += gridSize) {
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+            }
+            // Horizontal moving lines
+            for(let y = offset; y < canvas.height; y += gridSize) {
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+            }
+            
+            ctx.stroke();
+            
+            // Random Glitch Blocks
+            if(Math.random() > 0.95) {
+                const w = Math.random() * 200;
+                const h = Math.random() * 50;
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                ctx.fillStyle = Math.random() > 0.5 ? '#0ff' : '#f0f';
+                ctx.fillRect(x, y, w, h);
+            }
+
+            frame++;
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        /* --- LOGIC GAME --- */
+
+        function startGame() {
+            // Validasi input dihapus agar langsung main
+            state.playerName = "AGENT"; 
+            state.playerClass = "LOGIC_UNIT";
+
+            state.score = 0;
+            state.lives = 3;
+            state.currentQuestionIdx = 0;
+            state.isGameOver = false;
+
+            // Update UI
+            displays.name.innerText = state.playerName;
+            displays.score.innerText = "000";
+            updateLivesUI();
+
+            switchScreen('game');
+            loadQuestion();
+        }
+
+        function switchScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.remove('active'));
+            screens[screenName].classList.add('active');
+        }
+
+        function updateLivesUI() {
+            let hearts = "";
+            for(let i=0; i<state.lives; i++) hearts += "♥";
+            displays.lives.innerText = hearts;
+            if(state.lives <= 1) displays.lives.style.color = "red";
+            else displays.lives.style.color = "#f0f";
+        }
+
+        function loadQuestion() {
+            if (state.currentQuestionIdx >= questions.length) {
+                endGame(true);
+                return;
+            }
+
+            const q = questions[state.currentQuestionIdx];
+            
+            displays.qNum.innerText = `(${state.currentQuestionIdx + 1}/${questions.length})`;
+            displays.bugDesc.innerText = q.desc;
+            
+            // Render Code with Highlighted Error Hole
+            let htmlCode = `<span class="line-num">1</span>${q.codePre.replace(/\n/g, '<br><span class="line-num">2</span>')}`;
+            htmlCode += `<span class="bug-highlight">[ CORRUPTED ]</span>`;
+            if(q.codePost) {
+                htmlCode += `${q.codePost.replace(/\n/g, '<br><span class="line-num">3</span>')}`;
+            }
+            displays.codeBlock.innerHTML = htmlCode;
+
+            // Render Options
+            displays.answers.innerHTML = "";
+            q.options.forEach(opt => {
+                const btn = document.createElement('div');
+                btn.className = "module-card";
+                btn.innerHTML = `<h3>${opt.label}</h3><code>${opt.code}</code>`;
+                btn.onclick = () => checkAnswer(opt, q);
+                displays.answers.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedOption, questionObj) {
+            if (state.isGameOver) return;
+
+            let isCorrect = selectedOption.correct;
+            let titleText = "";
+            let msgText = "";
+            let boxColor = "";
+
+            if (isCorrect) {
+                // Benar
+                state.score += 20;
+                displays.score.innerText = state.score.toString().padStart(3, '0');
+                titleText = "PATCH SUCCESSFUL";
+                msgText = "Bug berhasil diperbaiki! Logic flow berjalan normal.<br><br><i>" + questionObj.explanation + "</i>";
+                boxColor = "#0f0"; // Green
+                
+                // Visual effect on code
+                displays.codeBlock.innerHTML = displays.codeBlock.innerHTML.replace(`<span class="bug-highlight">[ CORRUPTED ]</span>`, `<span style="color:#0f0; font-weight:bold;">${selectedOption.code}</span>`);
+            } else {
+                // Salah
+                state.lives--;
+                updateLivesUI();
+                titleText = "SYSTEM ERROR";
+                msgText = "Patch gagal! System integrity menurun.<br><br>Jawaban yang benar seharusnya logis sesuai error yang dijelaskan.";
+                boxColor = "#f00"; // Red
+            }
+
+            // Show Feedback Overlay
+            feedback.title.innerText = titleText;
+            feedback.title.style.color = boxColor;
+            feedback.box.style.borderColor = boxColor;
+            feedback.msg.innerHTML = msgText;
+            feedback.overlay.style.display = "flex";
+
+            // Prepare next step
+            if (!isCorrect && state.lives <= 0) {
+                // Game Over Logic inside closeFeedback
+            }
+        }
+
+        function closeFeedback() {
+            feedback.overlay.style.display = "none";
+            
+            if (state.lives <= 0) {
+                endGame(false);
+            } else {
+                // Lanjut soal berikutnya jika tadi benar, atau jika salah tapi nyawa masih ada (untuk simplifikasi, kita lanjut soal walau salah agar siswa melihat semua soal, tapi skor tidak bertambah)
+                state.currentQuestionIdx++;
+                loadQuestion();
+            }
+        }
+
+        function endGame(isWin) {
+            state.isGameOver = true;
+            switchScreen('end');
+            
+            displays.finalScore.innerText = state.score;
+            displays.finalName.innerText = state.playerName;
+            displays.finalClass.innerText = state.playerClass;
+
+            if(isWin) {
+                displays.endTitle.setAttribute('data-text', "MISSION SUCCESS");
+                displays.endTitle.innerText = "MISSION SUCCESS";
+                displays.endTitle.style.color = "#0f0";
+            } else {
+                displays.endTitle.setAttribute('data-text', "SYSTEM CRITICAL");
+                displays.endTitle.innerText = "SYSTEM CRITICAL";
+                displays.endTitle.style.color = "#f00";
+            }
+        }
+
+        function resetGame() {
+            // Reset input removed
+            switchScreen('start');
+        }
+
+    </script>
+</body>
+</html>

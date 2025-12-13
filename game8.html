@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk Cloud Quest: Server Defender</title>
+    <style>
+        /* --- CORE VISUALS & RESET --- */
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --neon-green: #0aff00;
+            --bg-dark: #050510;
+            --panel-bg: rgba(10, 20, 40, 0.85);
+            --font-main: 'Courier New', Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--neon-blue);
+            font-family: var(--font-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Cyberpunk Grid Background */
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            perspective: 500px;
+        }
+
+        /* --- CRT SCANLINE EFFECT --- */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 100;
+            animation: scrollLines 10s linear infinite;
+        }
+
+        /* --- CONTAINER & LAYOUT --- */
+        #game-container {
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 20px var(--neon-blue), inset 0 0 20px rgba(0, 243, 255, 0.2);
+            position: relative;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Corners Decoration */
+        .corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--neon-pink);
+            z-index: 10;
+        }
+        .tl { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+        .tr { top: -2px; right: -2px; border-left: none; border-bottom: none; }
+        .bl { bottom: -2px; left: -2px; border-right: none; border-top: none; }
+        .br { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+        /* --- SCREENS --- */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* --- TYPOGRAPHY & FORMS --- */
+        h1 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            text-shadow: 2px 2px var(--neon-pink), -1px -1px var(--neon-blue);
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 400px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--neon-pink);
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--neon-blue);
+            color: white;
+            font-family: var(--font-main);
+            font-size: 1.1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        /* --- BUTTONS --- */
+        .cyber-btn {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-family: var(--font-main);
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 20px;
+            position: relative;
+            transition: 0.3s;
+            overflow: hidden;
+            font-weight: bold;
+        }
+
+        .cyber-btn:hover {
+            background: var(--neon-green);
+            color: black;
+            box-shadow: 0 0 25px var(--neon-green);
+        }
+
+        /* --- GAMEPLAY UI --- */
+        #hud {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid var(--neon-blue);
+            background: rgba(0,0,0,0.6);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .hud-item span {
+            color: white;
+            font-weight: bold;
+        }
+
+        /* --- VISUAL PUZZLE AREA --- */
+        #image-display {
+            width: 300px;
+            height: 200px;
+            border: 2px dashed var(--neon-pink);
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        #image-display svg {
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.7));
+            max-width: 80%;
+            max-height: 80%;
+        }
+
+        #question-text {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        #options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .option-btn {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 15px;
+            cursor: pointer;
+            font-family: var(--font-main);
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .option-btn:hover {
+            background: rgba(0, 243, 255, 0.3);
+            transform: scale(1.02);
+        }
+
+        .option-btn.correct {
+            background: var(--neon-green);
+            color: black;
+            border-color: var(--neon-green);
+        }
+
+        .option-btn.wrong {
+            background: var(--neon-pink);
+            color: white;
+            border-color: var(--neon-pink);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes scrollLines {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100%; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .glitch-text {
+            animation: glitch 1s infinite;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.5rem; }
+            #options-container { grid-template-columns: 1fr; }
+            #image-display { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Overlay Visual -->
+    <div class="scanlines"></div>
+
+    <div id="game-container">
+        <!-- Decorative Corners -->
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+
+        <!-- LAYAR 1: START SCREEN -->
+        <div id="screen-start" class="screen active">
+            <h1 class="glitch-text">CLOUD QUEST<br><span style="font-size:0.5em; color:white;">SYSTEM_ACCESS</span></h1>
+            
+            <!-- Removed input fields for Name and Class -->
+            <div style="margin: 20px 0; border: 1px solid var(--neon-blue); padding: 10px; background: rgba(0, 243, 255, 0.1);">
+                <p style="color: var(--neon-blue);">STATUS: <span style="color: white; font-weight: bold;">SIAP TEMPUR</span></p>
+                <p style="color: var(--neon-pink); font-size: 0.9em;">MODE: <span style="color: white;">LATIHAN CEPAT</span></p>
+            </div>
+
+            <button class="cyber-btn" onclick="startGame()">INISIALISASI MISI</button>
+            <p style="margin-top:20px; font-size: 0.8rem; opacity: 0.7;">Tugas: Identifikasi arsitektur sistem awan.</p>
+        </div>
+
+        <!-- LAYAR 2: GAMEPLAY -->
+        <div id="screen-game" class="screen">
+            <div id="hud">
+                <div class="hud-item">AGEN: <span id="hud-name">Player</span></div>
+                <div class="hud-item">SKOR: <span id="hud-score" style="color:var(--neon-green)">0</span></div>
+                <div class="hud-item">NYAWA: <span id="hud-lives" style="color:var(--neon-pink)">❤❤❤</span></div>
+            </div>
+
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; width:100%;">
+                <!-- Area Gambar Visual (SVG Generated by JS) -->
+                <div id="image-display">
+                    <!-- SVG injected here -->
+                </div>
+                
+                <p style="color:var(--neon-pink); font-size:0.9rem; margin-top:5px;">[ENCRYPTED VISUAL DATA]</p>
+                <h3 id="question-text" style="margin-top:15px;">Apa nama komponen arsitektur di atas?</h3>
+
+                <div id="options-container">
+                    <!-- Buttons injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- LAYAR 3: GAME OVER -->
+        <div id="screen-end" class="screen">
+            <h1 style="color:var(--neon-pink)">MISI SELESAI</h1>
+            
+            <div style="background: rgba(0,0,0,0.5); padding: 20px; border: 1px solid var(--neon-blue); margin-bottom: 20px; width: 80%;">
+                <p style="margin-bottom:10px;">AGEN: <span id="end-name" style="color:white; font-weight:bold;">-</span></p>
+                <p style="margin-bottom:10px;">KELAS: <span id="end-class" style="color:white; font-weight:bold;">-</span></p>
+                <hr style="border-color: var(--neon-blue); margin: 10px 0; opacity: 0.3;">
+                <h2 style="font-size: 2rem; color: var(--neon-green);">SKOR AKHIR: <span id="end-score">0</span></h2>
+            </div>
+
+            <p id="end-message" style="margin-bottom: 20px;">Menunggu sinkronisasi data server...</p>
+
+            <button class="cyber-btn" onclick="restartGame()">REBOOT SYSTEM</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA SOAL (DATABASE GAME) ---
+        // Menggunakan SVG strings langsung untuk menghindari file eksternal
+        const gameData = [
+            {
+                id: 1,
+                answer: "Server Rack / Dedicated Server",
+                visual: `<svg viewBox="0 0 100 100" fill="none" stroke="#00f3ff" stroke-width="2">
+                            <rect x="20" y="10" width="60" height="80" rx="2" fill="#050510"/>
+                            <line x1="25" y1="20" x2="75" y2="20" />
+                            <circle cx="30" cy="15" r="2" fill="#0aff00" stroke="none"/>
+                            <line x1="25" y1="35" x2="75" y2="35" />
+                            <circle cx="30" cy="30" r="2" fill="#0aff00" stroke="none"/>
+                            <line x1="25" y1="50" x2="75" y2="50" />
+                            <circle cx="30" cy="45" r="2" fill="#ff00ff" stroke="none"/>
+                            <line x1="25" y1="65" x2="75" y2="65" />
+                            <circle cx="30" cy="60" r="2" fill="#0aff00" stroke="none"/>
+                        </svg>`,
+                options: ["Server Rack / Dedicated Server", "Personal Computer", "Router", "Switch Hub"]
+            },
+            {
+                id: 2,
+                answer: "Cloud Computing",
+                visual: `<svg viewBox="0 0 100 100" fill="none" stroke="#ff00ff" stroke-width="2">
+                            <path d="M25,60 Q10,60 10,45 Q10,30 25,30 Q30,10 50,10 Q70,10 75,30 Q90,30 90,45 Q90,60 75,60 Z" fill="#050510" />
+                            <path d="M35,40 L65,40 M35,45 L65,45 M35,50 L55,50" stroke="#00f3ff" />
+                        </svg>`,
+                options: ["Local Area Network", "Cloud Computing", "Hard Disk Drive", "Flashdisk"]
+            },
+            {
+                id: 3,
+                answer: "Database / Storage",
+                visual: `<svg viewBox="0 0 100 100" fill="none" stroke="#0aff00" stroke-width="2">
+                            <ellipse cx="50" cy="20" rx="30" ry="10" fill="#050510"/>
+                            <path d="M20,20 v20 a30,10 0 0,0 60,0 v-20" fill="#050510"/>
+                            <path d="M20,45 v20 a30,10 0 0,0 60,0 v-20" fill="#050510"/>
+                            <path d="M20,45 a30,10 0 0,0 60,0" />
+                            <path d="M20,20 a30,10 0 0,0 60,0" opacity="0.5"/>
+                        </svg>`,
+                options: ["CPU", "RAM", "Database / Storage", "Monitor"]
+            },
+            {
+                id: 4,
+                answer: "Firewall / Keamanan",
+                visual: `<svg viewBox="0 0 100 100" fill="none" stroke="#ff00ff" stroke-width="3">
+                            <path d="M50,10 L80,25 v25 c0,20 -15,35 -30,40 c-15,-5 -30,-20 -30,-40 v-25 Z" fill="#050510"/>
+                            <path d="M40,40 h20 v-5 a10,10 0 0,0 -20,0 v5 M45,50 v10" stroke="#00f3ff"/>
+                            <rect x="35" y="40" width="30" height="25" stroke="#00f3ff" fill="#050510"/>
+                        </svg>`,
+                options: ["Virus", "Firewall / Keamanan", "Hacker", "Open Port"]
+            },
+            {
+                id: 5,
+                answer: "SaaS (Software as a Service)",
+                visual: `<svg viewBox="0 0 100 100" fill="none" stroke="#00f3ff" stroke-width="2">
+                            <path d="M20,60 Q5,60 5,45 Q5,30 20,30 Q25,10 45,10 Q65,10 70,30 Q85,30 85,45 Q85,60 70,60 Z" stroke-dasharray="4" opacity="0.6"/>
+                            <rect x="30" y="35" width="40" height="30" fill="#050510" stroke="#0aff00"/>
+                            <line x1="30" y1="45" x2="70" y2="45" stroke="#0aff00"/>
+                            <circle cx="35" cy="40" r="1.5" fill="white" stroke="none"/>
+                            <circle cx="40" cy="40" r="1.5" fill="white" stroke="none"/>
+                        </svg>`,
+                options: ["IaaS (Infrastructure)", "PaaS (Platform)", "SaaS (Software)", "Hardware"]
+            },
+            {
+                id: 6,
+                answer: "IoT (Internet of Things)",
+                visual: `<svg viewBox="0 0 100 100" fill="none" stroke="#00f3ff" stroke-width="2">
+                            <circle cx="50" cy="50" r="10" fill="#050510"/>
+                            <line x1="50" y1="40" x2="50" y2="20" />
+                            <rect x="45" y="10" width="10" height="10" stroke="#0aff00"/>
+                            <line x1="60" y1="50" x2="80" y2="50" />
+                            <circle cx="85" cy="50" r="5" stroke="#ff00ff"/>
+                            <line x1="40" y1="50" x2="20" y2="50" />
+                            <rect x="10" y="45" width="10" height="10" stroke="#ff00ff"/>
+                            <line x1="50" y1="60" x2="50" y2="80" />
+                            <path d="M45,85 h10 l-5,10 z" stroke="#0aff00"/>
+                        </svg>`,
+                options: ["IoT (Internet of Things)", "Kabel Fiber Optik", "Satelit", "Bluetooth"]
+            },
+            {
+                id: 7,
+                answer: "Public Cloud",
+                visual: `<svg viewBox="0 0 100 100" fill="none" stroke="#00f3ff" stroke-width="2">
+                            <circle cx="50" cy="50" r="30" stroke-dasharray="5,5"/>
+                            <path d="M20,50 Q20,20 50,20 T80,50 T50,80 T20,50" stroke="#ff00ff" opacity="0.5"/>
+                            <path d="M50,20 v60 M20,50 h60" opacity="0.3"/>
+                            <text x="35" y="55" fill="white" font-size="10" stroke="none">WWW</text>
+                        </svg>`,
+                options: ["Private Cloud", "Public Cloud", "Hybrid Cloud", "Offline Storage"]
+            }
+        ];
+
+        // --- GAME STATE VARIABLES ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let lives = 3;
+        let playerName = "";
+        let playerClass = "";
+        let shuffledQuestions = [];
+
+        // --- DOM ELEMENTS ---
+        const screenStart = document.getElementById('screen-start');
+        const screenGame = document.getElementById('screen-game');
+        const screenEnd = document.getElementById('screen-end');
+        
+        // Removed inputName and inputClass references
+        
+        const hudName = document.getElementById('hud-name');
+        const hudScore = document.getElementById('hud-score');
+        const hudLives = document.getElementById('hud-lives');
+        
+        const imageDisplay = document.getElementById('image-display');
+        const optionsContainer = document.getElementById('options-container');
+        
+        const endName = document.getElementById('end-name');
+        const endClass = document.getElementById('end-class');
+        const endScore = document.getElementById('end-score');
+        const endMessage = document.getElementById('end-message');
+
+        // --- AUDIO (Synthesized Beeps) ---
+        // Kita menggunakan AudioContext sederhana untuk efek suara tanpa file eksternal
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            if (type === 'click') {
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'correct') {
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'wrong') {
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+                oscillator.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        // --- UTILITY FUNCTIONS ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function switchScreen(screenName) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenName).classList.add('active');
+        }
+
+        // --- GAME LOGIC ---
+
+        function startGame() {
+            // Set default values directly
+            playerName = "AGEN SIBER";
+            playerClass = "UMUM";
+
+            playSound('click');
+            
+            // Reset state
+            score = 0;
+            lives = 3;
+            currentQuestionIndex = 0;
+            shuffledQuestions = shuffleArray([...gameData]); // Clone dan shuffle soal
+
+            // Update UI
+            hudName.innerText = playerName;
+            updateHUD();
+
+            switchScreen('screen-game');
+            loadQuestion();
+        }
+
+        function updateHUD() {
+            hudScore.innerText = score;
+            // Render nyawa sebagai hati
+            let hearts = "";
+            for(let i=0; i<lives; i++) hearts += "❤";
+            hudLives.innerText = hearts;
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                endGame(true);
+                return;
+            }
+
+            const q = shuffledQuestions[currentQuestionIndex];
+            
+            // Render SVG
+            imageDisplay.innerHTML = q.visual;
+
+            // Render Pilihan Jawaban
+            optionsContainer.innerHTML = '';
+            
+            // Shuffle opsi jawaban agar posisi jawaban benar tidak selalu sama
+            const shuffledOptions = shuffleArray([...q.options]);
+
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, q.answer, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, correct, btnElement) {
+            // Disable semua tombol agar tidak bisa klik 2x
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (selected === correct) {
+                // Jawaban Benar
+                btnElement.classList.add('correct');
+                score += 100;
+                playSound('correct');
+            } else {
+                // Jawaban Salah
+                btnElement.classList.add('wrong');
+                lives--;
+                playSound('wrong');
+                
+                // Highlight jawaban yang benar
+                allBtns.forEach(b => {
+                    if (b.innerText === correct) b.classList.add('correct');
+                });
+            }
+
+            updateHUD();
+
+            // Cek Game Over atau Lanjut
+            setTimeout(() => {
+                if (lives <= 0) {
+                    endGame(false);
+                } else {
+                    currentQuestionIndex++;
+                    loadQuestion();
+                }
+            }, 1500); // Delay 1.5 detik sebelum soal berikutnya
+        }
+
+        function endGame(isWin) {
+            switchScreen('screen-end');
+            
+            endName.innerText = playerName;
+            endClass.innerText = playerClass;
+            endScore.innerText = score;
+
+            if (lives <= 0) {
+                endMessage.innerText = "SISTEM GAGAL: KONEKSI TERPUTUS (GAME OVER)";
+                endMessage.style.color = "var(--neon-pink)";
+            } else {
+                endMessage.innerText = "SINKRONISASI SUKSES: DATA TERAMANKAN!";
+                endMessage.style.color = "var(--neon-green)";
+            }
+        }
+
+        function restartGame() {
+            playSound('click');
+            // Removed input clearing logic
+            switchScreen('screen-start');
+        }
+
+        // Init effect
+        console.log("System Initialized...");
+    </script>
+</body>
+</html>
