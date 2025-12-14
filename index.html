@@ -451,6 +451,9 @@
     
     <!-- 1. HALAMAN JUDUL (LANDING PAGE) -->
     <div id="landing-page" class="flex-center">
+        <!-- Music Toggle Button -->
+        <button id="music-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0, 243, 255, 0.1); color: var(--neon-cyan); border: 1px solid var(--neon-cyan); padding: 5px 10px; font-family: 'Orbitron'; font-size: 0.7rem; cursor: pointer; transition: 0.3s;" onclick="toggleMusic()">🎵 MUSIC ON</button>
+        
         <h1 class="main-title">Informatics<br>EDUCATION</h1>
         <div class="sub-title">Interactive Learning Protocol</div>
         
@@ -586,6 +589,9 @@
 
 </div>
 
+<!-- Background Music -->
+<audio id="background-music" src="lagu.mp3" loop></audio>
+
 <script>
     /* Matrix Rain Effect */
     const canvas = document.getElementById('matrix-bg');
@@ -617,6 +623,12 @@
     function goToLogin() {
         document.getElementById('landing-page').classList.add('hidden');
         document.getElementById('login-page').classList.remove('hidden');
+        
+        // Start music on first interaction
+        const audio = document.getElementById('background-music');
+        audio.play().catch(() => {
+            // If blocked, try again on next interaction
+        });
     }
 
     function submitMission() {
@@ -765,6 +777,28 @@
             closeMaterialModal();
         }
     });
+
+    // Music Toggle
+    let musicPlaying = false; // Start as false, will be true after play
+    function toggleMusic() {
+        const audio = document.getElementById('background-music');
+        const btn = document.getElementById('music-btn');
+        if (musicPlaying) {
+            audio.pause();
+            btn.innerText = '🎵 MUSIC OFF';
+            musicPlaying = false;
+        } else {
+            audio.play().then(() => {
+                btn.innerText = '🎵 MUSIC ON';
+                musicPlaying = true;
+            }).catch(() => {
+                // If play fails, maybe show message
+            });
+        }
+    }
+
+    // Auto play music on first interaction (goToLogin)
+    // Removed load listener, now in goToLogin
 
 </script>
 
