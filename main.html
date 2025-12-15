@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Informatics Adventure - Secure Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Mengambil Font Futuristik -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-magenta: #ff00ff;
+            --neon-green: #0f0;
+            --neon-red: #ff3333;
+            --bg-dark: #020204;
+            --panel-bg: rgba(5, 15, 25, 0.9);
+            --border-color: rgba(0, 243, 255, 0.3);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Share Tech Mono', monospace;
+            background-color: black;
+            color: white;
+            height: 100vh;
+            overflow: hidden; 
+            position: relative;
+        }
+
+        /* ===== BACKGROUND EFFCTS ===== */
+        canvas#matrix-bg {
+            position: fixed; 
+            top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+        }
+        
+        .vignette {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 40%, black 100%);
+            z-index: 1; pointer-events: none;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px;
+            z-index: 999; pointer-events: none; opacity: 0.2;
+        }
+
+        /* ===== LAYOUT UMUM ===== */
+        .container {
+            position: relative; z-index: 10;
+            height: 100vh; width: 100%;
+            display: flex; flex-direction: column;
+        }
+
+        .hidden { display: none !important; }
+        .flex-center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+
+        /* ===== 1. HALAMAN JUDUL (LANDING) ===== */
+        #landing-page {
+            animation: fadeIn 1s ease-in;
+            background: rgba(0,0,0,0.6);
+        }
+
+        .main-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 5rem;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-shadow: 0 0 10px var(--neon-cyan), 0 0 30px var(--neon-cyan);
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .sub-title {
+            font-size: 1.2rem;
+            color: var(--neon-green);
+            margin-top: 20px;
+            margin-bottom: 50px;
+            letter-spacing: 3px;
+            background: rgba(0, 255, 0, 0.1);
+            padding: 5px 20px;
+            border-radius: 4px;
+            border: 1px solid var(--neon-green);
+            box-shadow: 0 0 10px rgba(0,255,0,0.2);
+        }
+
+        .creator-info { margin-bottom: 50px; text-align: center; }
+        .creator-info h3 { margin: 5px 0; font-size: 1.5rem; color: white; font-weight: normal; }
+        .creator-info .nim {
+            color: var(--neon-magenta); font-weight: bold; font-family: 'Orbitron'; letter-spacing: 2px;
+        }
+
+        /* ===== 2. HALAMAN LOGIN (DIPERBARUI - LEBIH SANGAR) ===== */
+        #login-page { 
+            background: rgba(0,0,0,0.9); 
+            perspective: 1000px;
+        }
+
+        .login-wrapper {
+            position: relative;
+            padding: 4px; /* Space for the border gradient */
+            background: linear-gradient(45deg, transparent 5%, var(--neon-cyan) 5%, var(--neon-cyan) 10%, transparent 10%, transparent 90%, var(--neon-magenta) 90%, var(--neon-magenta) 95%, transparent 95%);
+            clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.15);
+        }
+
+        .login-box {
+            background: rgba(10, 15, 20, 0.95);
+            padding: 50px 40px;
+            width: 380px;
+            position: relative;
+            clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+            overflow: hidden; /* For scanner effect */
+        }
+
+        /* Decorative "Tech" Corners */
+        .tech-corner {
+            position: absolute; width: 20px; height: 20px;
+            border: 2px solid var(--neon-cyan);
+            transition: 0.3s;
+        }
+        .tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+        .tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+        .bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+        .br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+        /* Animated Scanner Bar */
+        .scanner-beam {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 5px;
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            box-shadow: 0 0 15px var(--neon-cyan);
+            opacity: 0.5;
+            animation: scanMove 3s linear infinite;
+            z-index: 1; pointer-events: none;
+        }
+
+        @keyframes scanMove {
+            0% { top: -10%; opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { top: 110%; opacity: 0; }
+        }
+
+        /* Glitch Text Effect */
+        .glitch-header {
+            font-family: 'Orbitron'; 
+            color: white; 
+            text-align: center; 
+            font-size: 2rem;
+            letter-spacing: 4px;
+            margin-bottom: 5px;
+            position: relative;
+            text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan);
+            animation: glitch 3s infinite;
+        }
+
+        .security-badge {
+            text-align: center;
+            color: var(--neon-red);
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            border: 1px solid var(--neon-red);
+            display: inline-block;
+            padding: 2px 10px;
+            background: rgba(255, 51, 51, 0.1);
+        }
+
+        @keyframes glitch {
+            0% { text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan); transform: translate(0); }
+            2% { text-shadow: -2px 0 var(--neon-red), 2px 0 var(--neon-green); transform: translate(-2px, 2px); }
+            4% { text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan); transform: translate(0); }
+            100% { text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan); transform: translate(0); }
+        }
+
+        .input-group { margin-bottom: 25px; text-align: left; position: relative; z-index: 2;}
+        .input-group label { 
+            display: block; color: var(--neon-cyan); 
+            margin-bottom: 8px; font-family: 'Orbitron'; font-size: 0.8rem;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        
+        .cyber-input {
+            width: 100%;
+            background: rgba(0, 20, 40, 0.6); 
+            border: none;
+            border-bottom: 2px solid #333;
+            color: white;
+            padding: 15px; font-family: 'Share Tech Mono'; font-size: 1.2rem;
+            box-sizing: border-box; outline: none; transition: 0.3s;
+        }
+        .cyber-input::placeholder { color: #555; }
+        
+        /* Focus Effect: Border moves */
+        .cyber-input:focus { 
+            background: rgba(0, 243, 255, 0.05);
+            border-bottom-color: var(--neon-cyan);
+            box-shadow: 0 5px 15px rgba(0, 243, 255, 0.1); 
+        }
+
+        .login-btn-container { text-align: center; margin-top: 40px; position: relative; z-index: 2;}
+
+        .btn-neon-solid {
+            background: var(--neon-cyan);
+            color: black;
+            border: none;
+            padding: 15px 50px;
+            font-family: 'Orbitron'; font-weight: 900;
+            font-size: 1.1rem; cursor: pointer;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            transition: 0.3s;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+        .btn-neon-solid:hover {
+            background: white;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+            transform: scale(1.05);
+        }
+
+        .cancel-btn {
+            background: transparent; border: none; color: #666;
+            margin-top: 15px; cursor: pointer; font-family: 'Share Tech Mono';
+            font-size: 0.9rem; letter-spacing: 2px; transition: 0.3s;
+            position: relative; z-index: 2;
+        }
+        .cancel-btn:hover { color: var(--neon-red); text-shadow: 0 0 5px var(--neon-red); }
+
+        /* ===== 3. DASHBOARD (HUD) ===== */
+        #home {
+            display: flex; flex-direction: row; align-items: center; justify-content: center;
+            height: 100%; padding: 50px; gap: 50px;
+        }
+
+        .hud-panel {
+            background: var(--panel-bg);
+            border-left: 3px solid var(--neon-cyan);
+            padding: 30px; width: 350px; position: relative;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+        
+        .slide-in-left { animation: slideInLeft 0.8s forwards; opacity: 0; }
+        .slide-in-right { animation: slideInRight 0.8s forwards; opacity: 0; }
+
+        .profile-img-placeholder {
+            width: 80px; height: 80px;
+            border: 1px dashed var(--neon-cyan); border-radius: 50%;
+            margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; color: white; background: rgba(0, 243, 255, 0.1);
+        }
+        .profile-label { color: #888; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 2px; display: block;}
+        .profile-value { font-size: 1.3rem; margin-bottom: 15px; color: var(--neon-cyan); font-family: 'Orbitron'; display: block;}
+        
+        .main-content { text-align: left; max-width: 600px; }
+        h1.hero-title {
+            font-family: 'Orbitron'; font-size: 4rem; line-height: 1; margin: 0 0 20px 0;
+            color: white; text-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+
+        /* Button Style */
+        .btn-neon {
+            background: rgba(0, 243, 255, 0.1); color: var(--neon-cyan);
+            border: 1px solid var(--neon-cyan); padding: 15px 40px;
+            font-family: 'Orbitron'; font-size: 1.1rem; cursor: pointer;
+            transition: 0.3s; text-transform: uppercase; letter-spacing: 2px;
+            position: relative; overflow: hidden;
+        }
+        .btn-neon:hover { background: var(--neon-cyan); color: black; box-shadow: 0 0 20px var(--neon-cyan); }
+        .btn-primary { border-color: var(--neon-green); color: var(--neon-green); background: rgba(0, 255, 0, 0.05); }
+        .btn-primary:hover { background: var(--neon-green); color: black; box-shadow: 0 0 20px var(--neon-green); }
+
+        /* ===== 4. MENU PAGE ===== */
+        #menu {
+            padding: 20px 40px; height: 100vh; overflow: hidden;
+            background: rgba(5, 10, 15, 0.95);
+            display: flex; flex-direction: column; box-sizing: border-box;
+        }
+
+        .menu-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;
+            flex-shrink: 0;
+        }
+        .menu-title { font-family: 'Orbitron'; font-size: 1.8rem; color: white; margin: 0; }
+        
+        .header-buttons { display: flex; gap: 15px; }
+        
+        .btn-small {
+            padding: 8px 20px; font-size: 0.9rem; 
+            font-family: 'Orbitron'; cursor: pointer;
+            background: transparent; border: 1px solid #555; color: #aaa;
+            transition: 0.3s;
+        }
+        .btn-small:hover { border-color: white; color: white; }
+        
+        .btn-materi {
+            border-color: var(--neon-magenta); color: var(--neon-magenta);
+            background: rgba(255, 0, 255, 0.05);
+        }
+        .btn-materi:hover {
+            background: var(--neon-magenta); color: black; 
+            box-shadow: 0 0 10px var(--neon-magenta);
+        }
+
+        .game-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); 
+            gap: 15px; flex: 1; min-height: 0;
+        }
+
+        .game-card {
+            background: rgba(10, 20, 30, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px; text-align: center; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .game-card:hover {
+            background: rgba(0, 243, 255, 0.1); border-color: var(--neon-cyan);
+            transform: scale(1.02); box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); z-index: 10;
+        }
+        .icon-wrapper {
+            width: 50px; height: 50px; background: rgba(255,255,255,0.05);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 10px; transition: 0.3s; border: 1px solid transparent;
+        }
+        .game-icon { font-size: 1.8rem; transition: 0.3s; }
+        .game-card:hover .icon-wrapper {
+            background: rgba(0, 243, 255, 0.2); border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan); transform: scale(1.1);
+        }
+        .game-title { font-family: 'Orbitron'; font-size: 0.8rem; color: white; margin-bottom: 2px; font-weight: bold; letter-spacing: 1px; }
+        .game-desc { color: #aaa; font-size: 0.65rem; }
+        .game-card:hover .game-title { color: var(--neon-cyan); }
+
+        /* ===== MATERI MODAL OVERLAY ===== */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-box {
+            width: 80%; max-width: 900px; height: 70vh;
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-magenta);
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.15);
+            display: flex; flex-direction: row;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-close-btn {
+            position: absolute; top: -15px; right: -15px;
+            width: 30px; height: 30px; background: black;
+            border: 2px solid var(--neon-magenta); border-radius: 50%;
+            color: white; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 10; font-weight: bold;
+            transition: 0.3s;
+        }
+        .modal-close-btn:hover { background: var(--neon-magenta); color: black; }
+
+        .modal-sidebar {
+            width: 250px; background: rgba(0, 0, 0, 0.5);
+            border-right: 1px solid #333; padding: 20px;
+            display: flex; flex-direction: column; gap: 10px;
+            overflow-y: auto;
+        }
+
+        .topic-btn {
+            background: transparent; border: 1px solid #444; color: #aaa;
+            padding: 15px; text-align: left; font-family: 'Orbitron';
+            cursor: pointer; transition: 0.2s; font-size: 0.9rem;
+        }
+        .topic-btn:hover, .topic-btn.active {
+            border-color: var(--neon-cyan); color: var(--neon-cyan);
+            background: rgba(0, 243, 255, 0.1);
+        }
+        .topic-btn.active {
+            box-shadow: inset 5px 0 0 var(--neon-cyan);
+        }
+
+        .modal-content-area {
+            flex: 1; padding: 40px; overflow-y: auto;
+            background: url('data:image/svg+xml;utf8,<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g fill="%23222" fill-rule="evenodd"><path d="M0 40L40 0H20L0 20M40 40V20L20 40"/></g></svg>') repeat;
+        }
+        
+        .content-header {
+            font-family: 'Orbitron'; font-size: 2rem; color: var(--neon-cyan);
+            margin-bottom: 20px; border-bottom: 2px solid var(--neon-cyan);
+            padding-bottom: 10px;
+        }
+        .content-body { line-height: 1.6; font-size: 1.1rem; color: #ddd; }
+        .content-body ul { list-style-type: none; padding: 0; }
+        .content-body li {
+            margin-bottom: 10px; padding-left: 20px; position: relative;
+        }
+        .content-body li::before {
+            content: '>'; position: absolute; left: 0; color: var(--neon-green);
+        }
+
+        /* ===== GAME AREA ===== */
+        #game-area { flex-direction: column; height: 100vh; background: black; z-index: 50; }
+        .top-bar {
+            background: #050505; border-bottom: 1px solid var(--neon-cyan);
+            padding: 10px 20px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .back-btn {
+            background: transparent; color: white; border: 1px solid #555; padding: 5px 15px;
+            cursor: pointer; font-family: 'Orbitron'; transition: 0.3s; font-size: 0.8rem;
+        }
+        .back-btn:hover { border-color: var(--neon-magenta); color: var(--neon-magenta); }
+        iframe { flex: 1; border: none; background: #000; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInLeft { from { transform: translateX(-30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        @media (max-width: 768px) {
+            .main-title { font-size: 2.5rem; letter-spacing: 2px;}
+            #home { flex-direction: column; padding: 20px; gap: 20px; }
+            .hud-panel { width: 100%; box-sizing: border-box; }
+            #menu { overflow-y: auto; display: block; height: 100vh;} 
+            .game-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                grid-template-rows: auto; height: auto; padding-bottom: 50px;
+            }
+            .game-card { height: 150px; }
+            
+            /* Responsive Modal */
+            .modal-box { flex-direction: column; height: 85vh; width: 95%; }
+            .modal-sidebar { width: 100%; height: 150px; border-right: none; border-bottom: 1px solid #333; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Background Matrix Rain & Effects -->
+<canvas id="matrix-bg"></canvas>
+<div class="vignette"></div>
+<div class="scanlines"></div>
+
+<div class="container">
+    
+    <!-- Back Button to Main App Interface -->
+    <button onclick="window.location.href='index.html?loggedin=true'" style="position: absolute; top: 20px; left: 20px; background: rgba(255, 0, 255, 0.1); color: var(--neon-magenta); border: 1px solid var(--neon-magenta); padding: 5px 10px; font-family: 'Orbitron'; font-size: 0.7rem; cursor: pointer; transition: 0.3s; z-index: 1000;">⬅ BACK TO MAIN</button>
+    
+    <!-- 1. HALAMAN JUDUL (LANDING PAGE) -->
+    <div id="landing-page" class="flex-center">
+        <!-- Music Toggle Button -->
+        <button id="music-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0, 243, 255, 0.1); color: var(--neon-cyan); border: 1px solid var(--neon-cyan); padding: 5px 10px; font-family: 'Orbitron'; font-size: 0.7rem; cursor: pointer; transition: 0.3s;" onclick="toggleMusic()">🎵 MUSIC ON</button>
+        
+        <h1 class="main-title">Informatics<br>EDUCATION</h1>
+        <div class="sub-title">Interactive Learning Protocol</div>
+        
+        <div class="creator-info">
+            <p style="color: #888; letter-spacing: 2px; font-size: 0.8rem;">SYSTEM CREATOR</p>
+            <h3>Zanjabiela Adil Perkasa</h3>
+            <span class="nim"> NIM: K33523079 </span>
+        </div>
+
+        <button class="btn-neon btn-primary" onclick="goToLogin()">▶ START MISSION</button>
+    </div>
+
+    <!-- 2. HALAMAN LOGIN (RE-DESIGNED: LEBIH SANGAR) -->
+    <div id="login-page" class="flex-center hidden">
+        <div class="login-wrapper">
+            <div class="login-box">
+                <!-- Decorative Elements -->
+                <div class="scanner-beam"></div>
+                <div class="tech-corner tl"></div>
+                <div class="tech-corner tr"></div>
+                <div class="tech-corner bl"></div>
+                <div class="tech-corner br"></div>
+
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div class="glitch-header">AGENT LOGIN</div>
+                    <div class="security-badge">⚠ UNAUTHORIZED ACCESS PROHIBITED</div>
+                </div>
+
+                <div class="input-group">
+                    <label>CODENAME</label>
+                    <input type="text" id="input-name" class="cyber-input" placeholder="_ENTER NAME" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>ACCESS ID</label>
+                    <input type="text" id="input-id" class="cyber-input" placeholder="_Enter ID/NIM." autocomplete="off">
+                </div>
+
+                <div class="login-btn-container">
+                    <button class="btn-neon-solid" onclick="submitMission()">AUTHENTICATE</button>
+                    <br>
+                    <button class="cancel-btn" onclick="logout()">[ TERMINATE ]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. HALAMAN DASHBOARD (HUD) -->
+    <div id="home" class="hidden">
+        <div class="hud-panel slide-in-left">
+            <div class="profile-img-placeholder">👤</div>
+            <span class="profile-label">AGENT IDENTIFIER</span>
+            <span id="display-name" class="profile-value">UNKNOWN</span>
+            <span class="profile-label">SECURITY CLEARANCE</span>
+            <span id="display-id" class="profile-value" style="color:white; font-size: 1rem;">000000</span>
+            <span class="profile-label">SYSTEM STATUS</span>
+            <span style="color:var(--neon-green); font-family: 'Orbitron';">ONLINE</span>
+        </div>
+
+        <div class="main-content slide-in-right">
+            <h1 class="hero-title">WELCOME<br>AGENT</h1>
+            <p style="color: #aaa; margin-bottom: 30px; border-left: 2px solid var(--neon-green); padding-left: 15px;">
+                > Access granted to central mainframe.<br>
+                > Select a training module to enhance your informatics skills.
+            </p>
+            <button class="btn-neon" onclick="openMenu()">ACCESS MODULES</button>
+        </div>
+    </div>
+
+    <!-- 4. MENU PAGE (12 GAMES) -->
+    <div id="menu" class="hidden">
+        <div class="menu-header">
+            <div>
+                <h2 class="menu-title">MISSION CONTROL</h2>
+                <span style="color: #666; font-size: 0.9rem;">> SELECT MODULE TO EXECUTE</span>
+            </div>
+            <!-- BUTTON GROUP BARU -->
+            <div class="header-buttons">
+                <!-- Tombol Materi Baru -->
+                <button class="btn-small btn-materi" onclick="openMaterialModal()">📚 DATABASE MATERI</button>
+                <button class="btn-small" onclick="logout()">LOGOUT</button>
+            </div>
+        </div>
+
+        <div class="game-grid">
+            <!-- Game 1-12 (Sama seperti sebelumnya) -->
+            <div class="game-card" onclick="loadGame('game1.html')"><div class="icon-wrapper"><span class="game-icon">🖥️</span></div><div class="game-title">Rakit PC</div><div class="game-desc">Hardware Architecture</div></div>
+            <div class="game-card" onclick="loadGame('game2.html')"><div class="icon-wrapper"><span class="game-icon">🧠</span></div><div class="game-title">ALGO BUILDER</div><div class="game-desc">Logic Structures</div></div>
+            <div class="game-card" onclick="loadGame('game3.html')"><div class="icon-wrapper"><span class="game-icon">🎨</span></div><div class="game-title">PIXEL EDITOR</div><div class="game-desc">Visual Interface</div></div>
+            <div class="game-card" onclick="loadGame('game4.html')"><div class="icon-wrapper"><span class="game-icon">🌐</span></div><div class="game-title">NEURO TRAIN</div><div class="game-desc">AI Basics</div></div>
+            <div class="game-card" onclick="loadGame('game5.html')"><div class="icon-wrapper"><span class="game-icon">🤖</span></div><div class="game-title">NET RUNNER</div><div class="game-desc">Network Protocols</div></div>
+            <div class="game-card" onclick="loadGame('game6.html')"><div class="icon-wrapper"><span class="game-icon">🔐</span></div><div class="game-title">DECRYPTOR</div><div class="game-desc">Security & Hash</div></div>
+            <div class="game-card" onclick="loadGame('game7.html')"><div class="icon-wrapper"><span class="game-icon">👾</span></div><div class="game-title">BINARY STREAM</div><div class="game-desc">Number Systems</div></div>
+            <div class="game-card" onclick="loadGame('game8.html')"><div class="icon-wrapper"><span class="game-icon">☁️</span></div><div class="game-title">CLOUD HOPPER</div><div class="game-desc">Server Management</div></div>
+            <div class="game-card" onclick="loadGame('game9.html')"><div class="icon-wrapper"><span class="game-icon">🐞</span></div><div class="game-title">BUG HUNTER</div><div class="game-desc">Code Debugging</div></div>
+            <div class="game-card" onclick="loadGame('game10.html')"><div class="icon-wrapper"><span class="game-icon">📊</span></div><div class="game-title">DATA SORTER</div><div class="game-desc">Sorting Algorithms</div></div>
+            <div class="game-card" onclick="loadGame('game11.html')"><div class="icon-wrapper"><span class="game-icon">🛡️</span></div><div class="game-title">FIREWALL DEF</div><div class="game-desc">Cyber Defense</div></div>
+            <div class="game-card" onclick="loadGame('game12.html')"><div class="icon-wrapper"><span class="game-icon">⚡</span></div><div class="game-title">LOGIC GATES</div><div class="game-desc">Boolean Algebra</div></div>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP MATERI (BARU) -->
+    <div id="material-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-close-btn" onclick="closeMaterialModal()">X</div>
+            
+            <!-- Sidebar Navigasi -->
+            <div class="modal-sidebar">
+                <button class="topic-btn active" onclick="switchTopic('info')">INFORMATIKA</button>
+                <button class="topic-btn" onclick="switchTopic('jaringan')">JARINGAN</button>
+                <button class="topic-btn" onclick="switchTopic('algo')">ALGORITMA</button>
+                <button class="topic-btn" onclick="switchTopic('multi')">MULTIMEDIA</button>
+                <button class="topic-btn" onclick="switchTopic('siskom')">SIS. KOMPUTER</button>
+            </div>
+
+            <!-- Area Konten Teks -->
+            <div class="modal-content-area">
+                <h2 id="materi-title" class="content-header">INFORMATIKA</h2>
+                <div id="materi-body" class="content-body">
+                    <!-- Konten Default -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. GAME AREA -->
+    <div id="game-area" class="hidden">
+        <div class="top-bar">
+            <span style="color: var(--neon-cyan); font-family: 'Orbitron'; font-size: 0.9rem;">SIMULATION IN PROGRESS...</span>
+            <button class="back-btn" onclick="backToMenu()">ABORT MISSION</button>
+        </div>
+        <iframe id="game-frame" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+    </div>
+
+</div>
+
+<!-- Background Music -->
+<audio id="background-music" src="lagu.mp3" loop></audio>
+
+<script>
+    /* Matrix Rain Effect */
+    const canvas = document.getElementById('matrix-bg');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0F0';
+        ctx.font = fontSize + 'px monospace';
+        for(let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 35);
+    window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+
+    /* ===== MAIN LOGIC ===== */
+
+    function goToLogin() {
+        document.getElementById('landing-page').classList.add('hidden');
+        document.getElementById('login-page').classList.remove('hidden');
+        
+        // Start music on first interaction
+        const audio = document.getElementById('background-music');
+        audio.play().catch(() => {
+            // If blocked, try again on next interaction
+        });
+    }
+
+    function submitMission() {
+        const nameInput = document.getElementById('input-name').value;
+        const idInput = document.getElementById('input-id').value;
+
+        if(nameInput.trim() === "" || idInput.trim() === "") {
+            alert("ACCESS DENIED: Credentials required.");
+            return;
+        }
+
+        document.getElementById('display-name').innerText = nameInput;
+        document.getElementById('display-id').innerText = idInput;
+
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('home').classList.remove('hidden');
+        
+        const panel = document.querySelector('.hud-panel');
+        panel.classList.remove('slide-in-left');
+        void panel.offsetWidth; 
+        panel.classList.add('slide-in-left');
+    }
+
+    function openMenu() {
+        document.getElementById('home').classList.add('hidden');
+        document.getElementById('menu').classList.remove('hidden');
+    }
+
+    function logout() {
+        document.getElementById('input-name').value = '';
+        document.getElementById('input-id').value = '';
+        
+        document.getElementById('menu').classList.add('hidden');
+        document.getElementById('home').classList.add('hidden');
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('game-area').classList.add('hidden');
+        document.getElementById('material-modal').classList.add('hidden');
+
+        document.getElementById('landing-page').classList.remove('hidden');
+    }
+
+    function loadGame(src) {
+        document.getElementById('menu').classList.add('hidden');
+        document.getElementById('game-area').classList.remove('hidden');
+        document.getElementById('game-area').style.display = 'flex';
+        document.getElementById('game-frame').src = src;
+    }
+
+    function backToMenu() {
+        document.getElementById('game-area').classList.add('hidden');
+        document.getElementById('game-frame').src = '';
+        document.getElementById('menu').classList.remove('hidden');
+    }
+
+    /* ===== MATERI DATABASE LOGIC ===== */
+    
+    // Data Materi
+    const materiData = {
+        'info': {
+            title: "DASAR INFORMATIKA",
+            content: `
+                <p>Informatika adalah bidang studi yang membahas studi, perancangan, dan pembuatan sistem komputasi, serta prinsip-prinsip yang menjadi dasar perancangan tersebut.</p>
+                <ul>
+                    <li><strong>Berpikir Komputasional:</strong> Metode penyelesaian masalah untuk menemukan solusi yang efisien, efektif, dan optimal.</li>
+                    <li><strong>Teknologi Informasi:</strong> Penggunaan komputer untuk menyimpan, mengambil, dan memanipulasi data.</li>
+                    <li><strong>Dampak Sosial:</strong> Bagaimana teknologi mempengaruhi kehidupan masyarakat sehari-hari.</li>
+                </ul>`
+        },
+        'jaringan': {
+            title: "JARINGAN KOMPUTER",
+            content: `
+                <p>Jaringan komputer adalah sistem yang menghubungkan dua atau lebih komputer untuk berbagi sumber daya, data, dan aplikasi.</p>
+                <ul>
+                    <li><strong>LAN (Local Area Network):</strong> Jaringan dalam area kecil seperti satu gedung.</li>
+                    <li><strong>WAN (Wide Area Network):</strong> Jaringan yang mencakup area geografis yang luas (negara/benua).</li>
+                    <li><strong>Topologi:</strong> Susunan fisik jaringan (Star, Bus, Ring, Mesh).</li>
+                    <li><strong>Protokol (TCP/IP):</strong> Aturan standar komunikasi data di internet.</li>
+                </ul>`
+        },
+        'algo': {
+            title: "ALGORITMA & PEMROGRAMAN",
+            content: `
+                <p>Algoritma adalah urutan langkah-langkah logis untuk menyelesaikan masalah secara sistematis.</p>
+                <ul>
+                    <li><strong>Flowchart:</strong> Representasi grafis dari langkah-langkah algoritma.</li>
+                    <li><strong>Pseudocode:</strong> Kode semu yang menyerupai bahasa pemrograman tingkat tinggi.</li>
+                    <li><strong>Variabel & Tipe Data:</strong> Tempat penyimpanan data (Integer, String, Boolean).</li>
+                    <li><strong>Looping & Branching:</strong> Struktur kontrol untuk pengulangan dan percabangan kondisi.</li>
+                </ul>`
+        },
+        'multi': {
+            title: "TEKNOLOGI MULTIMEDIA",
+            content: `
+                <p>Multimedia adalah penggunaan komputer untuk menyajikan dan menggabungkan teks, suara, gambar, animasi, dan video.</p>
+                <ul>
+                    <li><strong>Grafis Vektor vs Raster:</strong> Perbedaan gambar berbasis matematis (SVG) dan piksel (JPG/PNG).</li>
+                    <li><strong>Audio Digital:</strong> Sampling rate, bitrate, dan format audio (MP3, WAV).</li>
+                    <li><strong>Kompresi Video:</strong> Teknik memperkecil ukuran file video tanpa mengurangi kualitas secara drastis.</li>
+                </ul>`
+        },
+        'siskom': {
+            title: "SISTEM KOMPUTER",
+            content: `
+                <p>Kumpulan perangkat-perangkat komputer yang saling berhubungan dan berinteraksi satu sama lain.</p>
+                <ul>
+                    <li><strong>Hardware (Perangkat Keras):</strong> CPU, RAM, Hard Disk, Motherboard.</li>
+                    <li><strong>Software (Perangkat Lunak):</strong> Sistem Operasi (OS), Aplikasi.</li>
+                    <li><strong>Brainware (Pengguna):</strong> Manusia yang mengoperasikan sistem komputer.</li>
+                    <li><strong>Sistem Bilangan:</strong> Biner, Desimal, Oktal, Heksadesimal.</li>
+                </ul>`
+        }
+    };
+
+    function openMaterialModal() {
+        document.getElementById('material-modal').classList.remove('hidden');
+        switchTopic('info'); // Load default topic
+    }
+
+    function closeMaterialModal() {
+        document.getElementById('material-modal').classList.add('hidden');
+    }
+
+    function switchTopic(topicKey) {
+        // Update Content
+        const data = materiData[topicKey];
+        if (data) {
+            document.getElementById('materi-title').innerText = data.title;
+            document.getElementById('materi-body').innerHTML = data.content;
+        }
+
+        // Update Active Button State
+        const buttons = document.querySelectorAll('.topic-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        // Cari tombol yang diklik (berdasarkan onclick attribute, cara simpel)
+        buttons.forEach(btn => {
+            if(btn.getAttribute('onclick').includes(topicKey)) {
+                btn.classList.add('active');
+            }
+        });
+    }
+
+    // Close modal if clicking outside the box
+    document.getElementById('material-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeMaterialModal();
+        }
+    });
+
+    // Music Toggle
+    let musicPlaying = false; // Start as false, will be true after play
+    function toggleMusic() {
+        const audio = document.getElementById('background-music');
+        const btn = document.getElementById('music-btn');
+        if (musicPlaying) {
+            audio.pause();
+            btn.innerText = '🎵 MUSIC OFF';
+            musicPlaying = false;
+        } else {
+            audio.play().then(() => {
+                btn.innerText = '🎵 MUSIC ON';
+                musicPlaying = true;
+            }).catch(() => {
+                // If play fails, maybe show message
+            });
+        }
+    }
+
+    // Auto play music on first interaction (goToLogin)
+    // Removed load listener, now in goToLogin
+
+</script>
+
+</body>
+</html>
