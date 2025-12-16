@@ -125,7 +125,7 @@
     <!-- 1. LANDING PAGE (Sekarang Lengkap Kembali) -->
     <div id="landingPage" class="fixed inset-0 z-50 bg-dark-bg flex flex-col overflow-y-auto scroll-smooth bg-cyber-grid">
         <!-- Navbar -->
-        <header class="w-full sticky top-0 z-50 glass-panel border-b border-white/5 !bg-opacity-80">
+        <header class="w-full sticky top-0 z-50 bg-black/20 border-b border-white/10 backdrop-blur-md">
             <div class="max-w-7xl mx-auto p-4 md:px-8 flex justify-between items-center">
                 <h1 class="text-3xl font-black tracking-tight flex items-center gap-2 cursor-pointer" onclick="location.reload()">
                     <i class="fa-solid fa-code text-brand-primary"></i> <span class="text-white">Code</span><span class="text-brand-primary">Lingo</span>
@@ -141,6 +141,28 @@
         <section class="py-24 px-6 min-h-[85vh] flex items-center relative overflow-hidden">
             <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-primary/20 rounded-full blur-[120px] -z-10 animate-float"></div>
             <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-brand-accent/20 rounded-full blur-[120px] -z-10 animate-float" style="animation-delay: 2s;"></div>
+
+            <!-- Floating Code Ornaments -->
+            <div class="absolute inset-0 -z-5 overflow-hidden">
+                <!-- Code Brackets -->
+                <div class="absolute top-20 left-10 text-brand-primary/20 text-6xl font-mono animate-float" style="animation-delay: 0s;">{</div>
+                <div class="absolute top-32 right-16 text-brand-accent/20 text-5xl font-mono animate-float" style="animation-delay: 1s;">}</div>
+                <div class="absolute bottom-40 left-20 text-brand-primary/15 text-4xl font-mono animate-float" style="animation-delay: 3s;">[</div>
+                <div class="absolute bottom-32 right-32 text-brand-accent/15 text-4xl font-mono animate-float" style="animation-delay: 2s;">]</div>
+
+                <!-- Binary & Symbols -->
+                <div class="absolute top-1/3 left-1/4 text-slate-500/30 text-sm font-mono animate-pulse" style="animation-delay: 0.5s;">01010101</div>
+                <div class="absolute top-2/3 right-1/3 text-slate-500/30 text-sm font-mono animate-pulse" style="animation-delay: 1.5s;">11001100</div>
+                <div class="absolute bottom-1/3 left-1/3 text-brand-primary/20 text-lg font-mono animate-float" style="animation-delay: 4s;">&lt;/&gt;</div>
+
+                <!-- Small Code Snippets -->
+                <div class="absolute top-16 right-1/4 text-slate-400/20 text-xs font-mono animate-float" style="animation-delay: 2.5s; transform: rotate(-5deg);">
+                    function()<br>{<br>&nbsp;&nbsp;return true;<br>}
+                </div>
+                <div class="absolute bottom-20 left-1/2 text-slate-400/20 text-xs font-mono animate-float" style="animation-delay: 3.5s; transform: rotate(3deg);">
+                    const app =<br>&nbsp;&nbsp;() =&gt; {}
+                </div>
+            </div>
 
             <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-20 relative z-10">
                 <div class="flex-1 flex justify-center order-2 md:order-1">
@@ -160,10 +182,17 @@
                     <button onclick="goToLogin()" class="w-full md:w-auto px-8 py-4 rounded-2xl bg-brand-primary text-white font-black text-lg uppercase btn-3d border-b-brand-secondary hover:brightness-110 shadow-[0_0_40px_rgba(99,102,241,0.4)] tracking-widest">Mulai Sekarang</button>
                 </div>
             </div>
+
+            <!-- Scroll Indicator -->
+            <div class="absolute bottom-2 left-1/2 transform -translate-x-1/2 animate-bounce">
+                <div class="text-slate-400 hover:text-white transition-colors duration-300 cursor-pointer" onclick="document.querySelector('#roadmap-section').scrollIntoView({behavior: 'smooth'})">
+                    <i class="fa-solid fa-chevron-down text-2xl animate-pulse"></i>
+                </div>
+            </div>
         </section>
 
         <!-- Roadmap (Step by Step) - DIKEMBALIKAN -->
-        <section class="py-24 px-6 border-t border-white/5 bg-dark-bg/30 relative z-10">
+        <section id="roadmap-section" class="py-24 px-6 border-t border-white/5 bg-dark-bg/30 relative z-10">
             <div class="max-w-6xl mx-auto">
                 <div class="text-center mb-20">
                     <h2 class="text-4xl font-black mb-4 text-white">Step by Step</h2>
@@ -193,6 +222,92 @@
                         <div class="w-14 h-14 bg-brand-warning/20 rounded-2xl flex items-center justify-center text-brand-warning text-2xl mb-6"><i class="fa-solid fa-server"></i></div>
                         <h3 class="text-xl font-bold mb-2 text-white">Backend & API</h3>
                         <p class="text-sm text-slate-400 leading-relaxed">Node.js & Database. Mengelola data dan server.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="py-24 px-6 border-t border-white/5 bg-gradient-to-b from-dark-bg/30 to-dark-bg/10 relative z-10">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-20">
+                    <h2 class="text-4xl font-black mb-4 text-white">Mengapa Memilih CodeLingo?</h2>
+                    <p class="text-slate-400">Platform pembelajaran coding terdepan dengan fitur-fitur unggulan</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="glass-panel p-8 rounded-3xl text-center group hover:-translate-y-2 transition duration-300">
+                        <div class="w-16 h-16 bg-gradient-to-br from-brand-primary to-brand-accent rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-brand-primary/20">
+                            <i class="fa-solid fa-gamepad text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4 text-white">Gamifikasi</h3>
+                        <p class="text-slate-400 leading-relaxed">Belajar coding sambil bermain! Dapatkan poin, badge, dan level untuk setiap pencapaianmu.</p>
+                    </div>
+                    <div class="glass-panel p-8 rounded-3xl text-center group hover:-translate-y-2 transition duration-300">
+                        <div class="w-16 h-16 bg-gradient-to-br from-brand-success to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-brand-success/20">
+                            <i class="fa-solid fa-infinity text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4 text-white">Gratis Selamanya</h3>
+                        <p class="text-slate-400 leading-relaxed">Akses penuh ke semua materi, project, dan sertifikat tanpa biaya apapun.</p>
+                    </div>
+                    <div class="glass-panel p-8 rounded-3xl text-center group hover:-translate-y-2 transition duration-300">
+                        <div class="w-16 h-16 bg-gradient-to-br from-brand-warning to-yellow-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-brand-warning/20">
+                            <i class="fa-solid fa-users text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4 text-white">Komunitas</h3>
+                        <p class="text-slate-400 leading-relaxed">Bergabung dengan ribuan developer Indonesia. Diskusi, kolaborasi, dan networking.</p>
+                    </div>
+                    <div class="glass-panel p-8 rounded-3xl text-center group hover:-translate-y-2 transition duration-300">
+                        <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/20">
+                            <i class="fa-solid fa-mobile-screen text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4 text-white">Responsive</h3>
+                        <p class="text-slate-400 leading-relaxed">Belajar dimana saja, kapan saja. Kompatibel dengan desktop, tablet, dan mobile.</p>
+                    </div>
+                    <div class="glass-panel p-8 rounded-3xl text-center group hover:-translate-y-2 transition duration-300">
+                        <div class="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-cyan-500/20">
+                            <i class="fa-solid fa-certificate text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4 text-white">Sertifikat</h3>
+                        <p class="text-slate-400 leading-relaxed">Dapatkan sertifikat resmi setelah menyelesaikan setiap modul pembelajaran.</p>
+                    </div>
+                    <div class="glass-panel p-8 rounded-3xl text-center group hover:-translate-y-2 transition duration-300">
+                        <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-red-500/20">
+                            <i class="fa-solid fa-clock text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4 text-white">Fleksibel</h3>
+                        <p class="text-slate-400 leading-relaxed">Belajar sesuai jadwalmu sendiri. Tidak ada deadline atau batasan waktu.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="py-24 px-6 bg-gradient-to-r from-brand-primary/5 via-brand-accent/5 to-brand-secondary/5 relative z-10">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-20">
+                    <h2 class="text-4xl font-black mb-4 text-white">CodeLingo by Numbers</h2>
+                    <p class="text-slate-400">Pencapaian dan dampak kami dalam ekosistem developer Indonesia</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    <div class="text-center group">
+                        <div class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-accent mb-4 group-hover:scale-110 transition-transform duration-300">50K+</div>
+                        <div class="text-slate-400 font-medium uppercase tracking-widest text-sm">Students</div>
+                        <div class="text-slate-500 text-xs mt-2">Developer aktif</div>
+                    </div>
+                    <div class="text-center group">
+                        <div class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-success to-green-400 mb-4 group-hover:scale-110 transition-transform duration-300">100+</div>
+                        <div class="text-slate-400 font-medium uppercase tracking-widest text-sm">Projects</div>
+                        <div class="text-slate-500 text-xs mt-2">Proyek selesai</div>
+                    </div>
+                    <div class="text-center group">
+                        <div class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-warning to-yellow-400 mb-4 group-hover:scale-110 transition-transform duration-300">95%</div>
+                        <div class="text-slate-400 font-medium uppercase tracking-widest text-sm">Success Rate</div>
+                        <div class="text-slate-500 text-xs mt-2">Tingkat kelulusan</div>
+                    </div>
+                    <div class="text-center group">
+                        <div class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-4 group-hover:scale-110 transition-transform duration-300">24/7</div>
+                        <div class="text-slate-400 font-medium uppercase tracking-widest text-sm">Support</div>
+                        <div class="text-slate-500 text-xs mt-2">Dukungan teknis</div>
                     </div>
                 </div>
             </div>
@@ -238,43 +353,142 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Scroll to Footer Indicator -->
+            <div class="text-center mt-16">
+                <div class="flex flex-col items-center gap-2 text-slate-500 hover:text-slate-400 transition-colors duration-300 cursor-pointer" onclick="document.querySelector('footer').scrollIntoView({behavior: 'smooth'})">
+                    <div class="flex flex-col gap-1">
+                        <div class="w-1 h-1 bg-current rounded-full animate-pulse" style="animation-delay: 0s"></div>
+                        <div class="w-1 h-1 bg-current rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+                        <div class="w-1 h-1 bg-current rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+                    </div>
+                </div>
+            </div>
         </section>
-        
+
+        <!-- FAQ Section -->
+        <section class="py-16 px-6 border-t border-white/5 bg-dark-bg/20 relative z-10">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-black mb-4 text-white">Pertanyaan Umum</h2>
+                    <p class="text-slate-400">Jawaban untuk pertanyaan yang sering ditanyakan</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass-panel p-4 rounded-xl">
+                        <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-question-circle text-brand-primary text-sm"></i>
+                            Apakah CodeLingo benar-benar gratis?
+                        </h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Ya! CodeLingo sepenuhnya gratis tanpa biaya tersembunyi. Semua materi, project, dan sertifikat dapat diakses tanpa batasan.</p>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl">
+                        <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-question-circle text-brand-primary text-sm"></i>
+                            Berapa lama waktu belajar?
+                        </h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Waktu belajar fleksibel sesuai jadwalmu. Rata-rata siswa menyelesaikan kurikulum dalam 4-6 bulan dengan 5-10 jam per minggu.</p>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl">
+                        <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-question-circle text-brand-primary text-sm"></i>
+                            Apakah butuh pengalaman sebelumnya?
+                        </h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Tidak! Kurikulum dirancang untuk pemula absolut. Kami bimbing step by step dari nol hingga profesional.</p>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl">
+                        <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-question-circle text-brand-primary text-sm"></i>
+                            Bagaimana cara dapat sertifikat?
+                        </h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Sertifikat otomatis diberikan setelah menyelesaikan modul dengan nilai ≥70%. Bisa diunduh dan dibagikan.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Footer (Creator Name) - DIKEMBALIKAN -->
         <footer class="glass-panel py-12 px-6 border-t border-white/5 text-center relative z-10">
             <div class="font-black text-2xl text-white mb-2 tracking-tight">CodeLingo</div>
-            <p class="text-slate-500 text-sm mb-8">&copy; 2025 Future of Coding.</p>
-            
-            <div class="inline-block border border-white/10 rounded-2xl p-6 bg-white/5 backdrop-blur-md hover:bg-white/10 transition cursor-default">
-                <p class="text-brand-primary font-bold text-xs tracking-[0.2em] uppercase mb-2">SYSTEM CREATOR</p>
-                <p class="text-white font-black text-lg tracking-wide">Zanjabiela Adil Perkasa</p>
-                <p class="text-slate-400 text-xs font-mono mt-1 opacity-70">NIM: K3523079</p>
+            <p class="text-slate-500 text-sm mb-6">&copy; 2025 Future of Coding. All rights reserved.</p>
+
+            <!-- Professional Creator Attribution -->
+            <div class="text-slate-400 text-xs">
+                <span class="opacity-60">Developed with</span>
+                <i class="fa-solid fa-heart text-red-400 mx-1 animate-pulse"></i>
+                <span class="opacity-60">by</span>
+                <span class="text-white font-medium">Zanjabiela Adil Perkasa</span>
+                <span class="opacity-60 ml-2">•</span>
+                <span class="text-slate-500 font-mono ml-2">NIM: K3523079</span>
             </div>
         </footer>
     </div>
 
-    <!-- 2. LOGIN PAGE (Original Logic) -->
+    <!-- 2. LOGIN PAGE (Improved Design) -->
     <div id="loginPage" class="fixed inset-0 z-50 bg-dark-bg hidden flex-col items-center justify-center p-4 bg-cyber-grid">
-        <div class="w-full max-w-md glass-panel p-10 rounded-[2rem] shadow-2xl relative border border-white/10">
-            <button onclick="backToLanding()" class="absolute top-8 left-8 text-slate-400 hover:text-white transition"><i class="fa-solid fa-arrow-left text-xl"></i></button>
-            <div class="text-center mb-10">
-                <div class="w-24 h-24 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-brand-primary/30 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
-                    <i class="fa-solid fa-robot text-5xl text-brand-primary"></i>
+        <div class="w-full max-w-md glass-panel p-8 rounded-[2rem] shadow-2xl relative border border-white/10 overflow-hidden mx-4">
+            <!-- Background Effects -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-brand-primary/10 rounded-full blur-[60px] -z-10"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-brand-accent/10 rounded-full blur-[40px] -z-10"></div>
+
+            <button onclick="backToLanding()" class="absolute top-6 left-6 text-slate-400 hover:text-white transition z-10">
+                <i class="fa-solid fa-arrow-left text-lg"></i>
+            </button>
+
+            <div class="text-center mb-6 relative z-10">
+                <div class="relative inline-block mb-4">
+                    <div class="w-16 h-16 bg-gradient-to-br from-brand-primary to-brand-accent rounded-full flex items-center justify-center mx-auto shadow-xl shadow-brand-primary/20 animate-float">
+                        <i class="fa-solid fa-robot text-3xl text-white drop-shadow-lg"></i>
+                    </div>
+                    <div class="absolute -top-1 -right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center animate-pulse">
+                        <i class="fa-solid fa-circle-check text-white text-xs"></i>
+                    </div>
                 </div>
-                <h2 class="text-3xl font-black text-white mb-2">Selamat Datang</h2>
-                <p class="text-slate-400 text-sm">Masuk untuk melanjutkan progresmu.</p>
+                <h2 class="text-2xl font-black text-white mb-2 tracking-tight">Selamat Datang Kembali</h2>
+                <p class="text-slate-400 text-sm">Masuk untuk melanjutkan petualangan codingmu</p>
             </div>
-            <form onsubmit="handleLogin(event)" class="space-y-6">
+
+            <!-- Login Form -->
+            <form onsubmit="handleLogin(event)" class="space-y-5 relative z-10">
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-brand-primary tracking-widest uppercase ml-1">Email</label>
-                    <input type="email" id="emailInput" required placeholder="nama@email.com" class="w-full bg-dark-bg/60 border border-white/10 rounded-xl p-4 text-white focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition font-mono text-sm placeholder-slate-600">
+                    <label class="text-sm font-bold text-brand-primary tracking-widest uppercase">Email</label>
+                    <div class="relative">
+                        <input type="email" id="emailInput" required placeholder="nama@email.com"
+                               class="w-full bg-dark-bg/80 border border-white/10 rounded-xl p-3 pl-10 text-white focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all duration-300 font-mono placeholder-slate-500 hover:bg-dark-bg/90">
+                        <i class="fa-solid fa-envelope absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                    </div>
                 </div>
+
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-brand-primary tracking-widest uppercase ml-1">Password</label>
-                    <input type="password" required placeholder="••••••••" class="w-full bg-dark-bg/60 border border-white/10 rounded-xl p-4 text-white focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition placeholder-slate-600">
+                    <label class="text-sm font-bold text-brand-primary tracking-widest uppercase">Password</label>
+                    <div class="relative">
+                        <input type="password" id="passwordInput" required placeholder="••••••••"
+                               class="w-full bg-dark-bg/80 border border-white/10 rounded-xl p-3 pl-10 pr-10 text-white focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all duration-300 placeholder-slate-500 hover:bg-dark-bg/90">
+                        <i class="fa-solid fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                        <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition">
+                            <i class="fa-solid fa-eye" id="passwordToggle"></i>
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" class="w-full py-4 rounded-xl bg-brand-primary text-white font-black text-lg uppercase tracking-widest btn-3d border-b-brand-secondary hover:brightness-110 shadow-lg mt-4">Masuk</button>
+
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 rounded border-white/20 bg-dark-bg/50 text-brand-primary focus:ring-brand-primary/20">
+                        <span class="text-slate-400">Ingat saya</span>
+                    </label>
+                    <a href="#" class="text-brand-primary hover:text-brand-accent transition">Lupa password?</a>
+                </div>
+
+                <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-primary to-brand-accent text-white font-black text-sm uppercase tracking-widest btn-3d border-b-brand-secondary/50 hover:brightness-110 shadow-xl hover:shadow-brand-primary/20 transition-all duration-300 mt-6">
+                    <i class="fa-solid fa-rocket mr-2"></i>Masuk ke CodeLingo
+                </button>
             </form>
+
+            <!-- Creator Info -->
+            <div class="text-center pt-4 border-t border-white/10">
+                <p class="text-slate-400 text-xs tracking-[0.2em] uppercase mb-1">SYSTEM CREATOR</p>
+                <p class="text-white font-medium text-sm">Zanjabiela Adil Perkasa</p>
+                <p class="text-slate-500 text-xs">NIM: K3523079</p>
+            </div>
         </div>
     </div>
 
@@ -941,46 +1155,144 @@
 
                          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-white/10">
                             <div class="bg-dark-bg/40 p-6 rounded-2xl border border-white/5 relative group hover:border-brand-warning/30 transition overflow-hidden">
-                                <div class="text-xs text-slate-400 uppercase font-black tracking-[0.2em] mb-2">TOTAL XP</div>
-                                <div id="profile-total-xp" class="text-4xl font-black text-white mb-2">0</div>
+                                <div class="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div class="relative z-10">
+                                    <div class="text-xs text-slate-400 uppercase font-black tracking-[0.2em] mb-2">TOTAL XP</div>
+                                    <div id="profile-total-xp" class="text-4xl font-black text-white mb-2">0</div>
+                                    <div class="w-full h-2 bg-dark-bg rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse" id="xp-progress-bar" style="width: 65%"></div>
+                                    </div>
+                                    <div class="text-xs text-slate-400 mt-1">65% to next level</div>
+                                </div>
                             </div>
                              <div class="bg-dark-bg/40 p-6 rounded-2xl border border-white/5 relative group hover:border-brand-warning/30 transition overflow-hidden">
-                                <div class="text-xs text-slate-400 uppercase font-black tracking-[0.2em] mb-2">STREAK</div>
-                                <div class="text-4xl font-black text-white mb-2">1</div>
+                                <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div class="relative z-10">
+                                    <div class="text-xs text-slate-400 uppercase font-black tracking-[0.2em] mb-2">STREAK</div>
+                                    <div class="text-4xl font-black text-white mb-2 flex items-center gap-2">
+                                        7 <i class="fa-solid fa-fire text-red-400 animate-bounce"></i>
+                                    </div>
+                                    <div class="w-full h-2 bg-dark-bg rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-red-400 to-pink-500 rounded-full" style="width: 70%"></div>
+                                    </div>
+                                    <div class="text-xs text-slate-400 mt-1">7 hari berturut-turut</div>
+                                </div>
                             </div>
                              <div class="bg-dark-bg/40 p-6 rounded-2xl border border-white/5 relative group hover:border-brand-success/30 transition overflow-hidden">
-                                <div class="text-xs text-slate-400 uppercase font-black tracking-[0.2em] mb-2">LEVEL</div>
-                                <div class="text-4xl font-black text-white mb-2">1</div>
+                                <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div class="relative z-10">
+                                    <div class="text-xs text-slate-400 uppercase font-black tracking-[0.2em] mb-2">LEVEL</div>
+                                    <div class="text-4xl font-black text-white mb-2">12</div>
+                                    <div class="w-full h-2 bg-dark-bg rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse" style="width: 45%"></div>
+                                    </div>
+                                    <div class="text-xs text-slate-400 mt-1">45% to level 13</div>
+                                </div>
                             </div>
                         </div>
                         
+                        <!-- SKILLS & COMPETENCIES -->
+                        <div class="pt-8 border-t border-white/10">
+                            <h3 class="text-xl font-black text-white mb-6 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <i class="fa-solid fa-code text-brand-primary"></i>
+                                Skill Level
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-dark-bg/40 p-6 rounded-2xl border border-white/5">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-sm font-bold text-white">Python</span>
+                                        <span class="text-sm text-brand-primary font-mono">85%</span>
+                                    </div>
+                                    <div class="w-full h-3 bg-dark-bg rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse" style="width: 85%"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-dark-bg/40 p-6 rounded-2xl border border-white/5">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-sm font-bold text-white">JavaScript</span>
+                                        <span class="text-sm text-brand-primary font-mono">72%</span>
+                                    </div>
+                                    <div class="w-full h-3 bg-dark-bg rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full" style="width: 72%"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-dark-bg/40 p-6 rounded-2xl border border-white/5">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-sm font-bold text-white">Data Structures</span>
+                                        <span class="text-sm text-brand-primary font-mono">68%</span>
+                                    </div>
+                                    <div class="w-full h-3 bg-dark-bg rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style="width: 68%"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-dark-bg/40 p-6 rounded-2xl border border-white/5">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-sm font-bold text-white">Algorithms</span>
+                                        <span class="text-sm text-brand-primary font-mono">61%</span>
+                                    </div>
+                                    <div class="w-full h-3 bg-dark-bg rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full" style="width: 61%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- ACHIEVEMENTS SECTION -->
                         <div class="pt-8 border-t border-white/10">
-                            <h3 class="text-xl font-black text-white mb-6 uppercase tracking-[0.2em]">Pencapaian</h3>
+                            <h3 class="text-xl font-black text-white mb-6 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <i class="fa-solid fa-trophy text-yellow-400"></i>
+                                Pencapaian
+                            </h3>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div class="bg-dark-bg/40 p-4 rounded-2xl border border-white/5 text-center group hover:border-brand-primary/30 transition">
-                                    <div class="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-2xl text-brand-primary mx-auto mb-3 group-hover:scale-110 transition"><i class="fa-solid fa-play"></i></div>
-                                    <div class="text-xs text-slate-400 uppercase font-bold mb-1">First Lesson</div>
-                                    <div class="text-sm font-bold text-white">Completed</div>
+                                <div class="bg-dark-bg/40 p-4 rounded-2xl border border-white/5 text-center group hover:border-brand-primary/30 transition relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="relative z-10">
+                                        <div class="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-2xl text-brand-primary mx-auto mb-3 group-hover:scale-110 transition animate-pulse">
+                                            <i class="fa-solid fa-play"></i>
+                                        </div>
+                                        <div class="text-xs text-slate-400 uppercase font-bold mb-1">First Lesson</div>
+                                        <div class="text-sm font-bold text-white">Completed</div>
+                                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-brand-primary rounded-full animate-ping"></div>
+                                    </div>
                                 </div>
-                                <div class="bg-dark-bg/40 p-4 rounded-2xl border border-white/5 text-center group hover:border-brand-secondary/30 transition">
-                                    <div class="w-12 h-12 rounded-full bg-brand-secondary/10 flex items-center justify-center text-2xl text-brand-secondary mx-auto mb-3 group-hover:scale-110 transition"><i class="fa-solid fa-fire"></i></div>
-                                    <div class="text-xs text-slate-400 uppercase font-bold mb-1">Streak Master</div>
-                                    <div class="text-sm font-bold text-white">7 Days</div>
+                                <div class="bg-dark-bg/40 p-4 rounded-2xl border border-white/5 text-center group hover:border-red-500/30 transition relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-red-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="relative z-10">
+                                        <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-2xl text-red-400 mx-auto mb-3 group-hover:scale-110 transition">
+                                            <i class="fa-solid fa-fire animate-bounce"></i>
+                                        </div>
+                                        <div class="text-xs text-slate-400 uppercase font-bold mb-1">Streak Master</div>
+                                        <div class="text-sm font-bold text-white">7 Days</div>
+                                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-ping"></div>
+                                    </div>
                                 </div>
-                                <div class="bg-dark-bg/40 p-4 rounded-2xl border border-white/5 text-center group hover:border-brand-accent/30 transition">
-                                    <div class="w-12 h-12 rounded-full bg-brand-accent/10 flex items-center justify-center text-2xl text-brand-accent mx-auto mb-3 group-hover:scale-110 transition"><i class="fa-solid fa-brain"></i></div>
-                                    <div class="text-xs text-slate-400 uppercase font-bold mb-1">Code Genius</div>
-                                    <div class="text-sm font-bold text-white">500 XP</div>
+                                <div class="bg-dark-bg/40 p-4 rounded-2xl border border-white/5 text-center group hover:border-purple-500/30 transition relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="relative z-10">
+                                        <div class="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center text-2xl text-purple-400 mx-auto mb-3 group-hover:scale-110 transition">
+                                            <i class="fa-solid fa-brain"></i>
+                                        </div>
+                                        <div class="text-xs text-slate-400 uppercase font-bold mb-1">Code Genius</div>
+                                        <div class="text-sm font-bold text-white">500 XP</div>
+                                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-purple-400 rounded-full animate-ping"></div>
+                                    </div>
                                 </div>
-                                <div class="bg-dark-bg/40 p-4 rounded-2xl border border-white/5 text-center group hover:border-yellow-500/30 transition opacity-50">
-                                    <div class="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center text-2xl text-yellow-500 mx-auto mb-3 group-hover:scale-110 transition"><i class="fa-solid fa-trophy"></i></div>
-                                    <div class="text-xs text-slate-400 uppercase font-bold mb-1">Champion</div>
-                                    <div class="text-sm font-bold text-slate-500">Locked</div>
+                                <div class="bg-dark-bg/40 p-4 rounded-2xl border border-white/5 text-center group hover:border-yellow-500/30 transition opacity-50 relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="relative z-10">
+                                        <div class="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center text-2xl text-yellow-500 mx-auto mb-3 group-hover:scale-110 transition">
+                                            <i class="fa-solid fa-trophy"></i>
+                                        </div>
+                                        <div class="text-xs text-slate-400 uppercase font-bold mb-1">Champion</div>
+                                        <div class="text-sm font-bold text-slate-500">Locked</div>
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <i class="fa-solid fa-lock text-yellow-500/50 text-lg"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- RECENT ACTIVITY -->
                         <div class="pt-8 border-t border-white/10">
                             <h3 class="text-xl font-black text-white mb-6 uppercase tracking-[0.2em]">Aktivitas Terbaru</h3>
@@ -1594,6 +1906,45 @@
             switchPage('dashboard');
         }
 
+        function togglePassword() {
+            const passwordInput = document.getElementById('passwordInput');
+            const passwordToggle = document.getElementById('passwordToggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordToggle.className = 'fa-solid fa-eye-slash text-lg';
+            } else {
+                passwordInput.type = 'password';
+                passwordToggle.className = 'fa-solid fa-eye text-lg';
+            }
+        }
+
+        function handleGoogleLogin() {
+            // Simulate Google login (in real implementation, this would integrate with Google OAuth)
+            alert('Fitur login Google sedang dalam pengembangan. Gunakan login email untuk saat ini.');
+            
+            // For demo purposes, create a Google-style login
+            const googleName = 'GoogleUser_' + Math.floor(Math.random() * 1000);
+            userState.name = googleName;
+            userState.initial = 'G';
+            userState.xp = 25; // Bonus XP for Google login
+            userState.gems = 15;
+            userState.currentLevel = 1;
+
+            sessionStorage.setItem('codelingo_session_v1', JSON.stringify(userState));
+
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('flex');
+            document.getElementById('appContainer').classList.remove('hidden');
+            document.getElementById('appContainer').classList.add('flex');
+            document.getElementById('mobileNav').classList.remove('hidden');
+            document.getElementById('mobileNav').classList.add('flex');
+            
+            updateUserUI();
+            renderPath();
+            switchPage('dashboard');
+        }
+
         function logout() {
             sessionStorage.removeItem('codelingo_session_v1');
             location.reload();
@@ -1743,6 +2094,7 @@
             checkBtn.disabled = true;
             checkBtn.className = 'w-full py-4 rounded-2xl bg-slate-700 text-slate-400 font-black uppercase tracking-widest text-lg btn-3d border-b-slate-800 cursor-not-allowed';
             checkBtn.innerText = "PERIKSA";
+            checkBtn.onclick = () => checkAnswer(); // Reset onclick handler
             checkBtn.classList.remove('hidden');
             
             document.getElementById('continueBtn').classList.add('hidden');
