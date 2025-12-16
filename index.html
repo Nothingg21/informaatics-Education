@@ -41,6 +41,8 @@
                         'float': 'float 3s ease-in-out infinite',
                         'shimmer': 'shimmer 2s infinite',
                         'pulse-glow': 'pulseGlow 4s infinite',
+                        'champion-glow': 'championGlow 2s ease-in-out infinite alternate',
+                        'slide-in-up': 'slideInUp 0.6s ease-out',
                     },
                     keyframes: {
                         float: {
@@ -54,6 +56,14 @@
                         pulseGlow: {
                             '0%, 100%': { opacity: 0.6 },
                             '50%': { opacity: 1 },
+                        },
+                        championGlow: {
+                            '0%': { boxShadow: '0 0 20px rgba(251, 191, 36, 0.3)' },
+                            '100%': { boxShadow: '0 0 30px rgba(251, 191, 36, 0.6)' },
+                        },
+                        slideInUp: {
+                            '0%': { transform: 'translateY(30px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
                         }
                     }
                 }
@@ -379,7 +389,7 @@
                     <!-- 1. Hero Section -->
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                         <div>
-                            <h2 class="text-3xl md:text-4xl font-black text-white mb-2">Halo, <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-accent" id="dash-name">Coder</span>! 👋</h2>
+                            <h2 class="text-3xl md:text-4xl font-black text-white mb-2">Selamat Datang, <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-accent" id="dash-name">Coder</span>! 👋</h2>
                             <p class="text-slate-400">Siap untuk memecahkan bug dan belajar hal baru hari ini?</p>
                         </div>
                         <div class="flex gap-3">
@@ -525,6 +535,81 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Additional Modules Row -->
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2 mt-8 mb-4">
+                                <i class="fa-solid fa-star text-yellow-500"></i>
+                                Modul Lanjutan
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Card 5: Web Development -->
+                                <div onclick="openMateri('web')" class="glass-panel p-5 rounded-2xl hover:bg-white/5 transition-all cursor-pointer group border border-white/5 hover:border-pink-500/50 relative overflow-hidden">
+                                    <div class="absolute right-0 top-0 w-24 h-24 bg-pink-500/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
+                                    <div class="flex items-start gap-4 relative z-10">
+                                        <div class="w-14 h-14 rounded-xl bg-pink-500/10 flex items-center justify-center group-hover:bg-pink-500/20 transition-colors shadow-lg shadow-pink-500/10">
+                                            <i class="fa-solid fa-code text-2xl text-pink-500"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-white text-lg group-hover:text-pink-500 transition-colors">Web Development</h4>
+                                            <p class="text-xs text-slate-400 mt-1 line-clamp-2">HTML, CSS, JavaScript, frameworks.</p>
+                                            <div class="mt-3 flex items-center gap-2 text-[10px] font-bold text-pink-500 bg-pink-500/10 w-fit px-2 py-0.5 rounded">
+                                                <span>PELAJARI</span> <i class="fa-solid fa-arrow-right"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Card 6: Cybersecurity -->
+                                <div onclick="openMateri('security')" class="glass-panel p-5 rounded-2xl hover:bg-white/5 transition-all cursor-pointer group border border-white/5 hover:border-red-500/50 relative overflow-hidden">
+                                    <div class="absolute right-0 top-0 w-24 h-24 bg-red-500/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
+                                    <div class="flex items-start gap-4 relative z-10">
+                                        <div class="w-14 h-14 rounded-xl bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors shadow-lg shadow-red-500/10">
+                                            <i class="fa-solid fa-shield-alt text-2xl text-red-500"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-white text-lg group-hover:text-red-500 transition-colors">Cybersecurity</h4>
+                                            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Keamanan digital, enkripsi, hacking.</p>
+                                            <div class="mt-3 flex items-center gap-2 text-[10px] font-bold text-red-500 bg-red-500/10 w-fit px-2 py-0.5 rounded">
+                                                <span>PELAJARI</span> <i class="fa-solid fa-arrow-right"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Card 7: Database -->
+                                <div onclick="openMateri('database')" class="glass-panel p-5 rounded-2xl hover:bg-white/5 transition-all cursor-pointer group border border-white/5 hover:border-cyan-500/50 relative overflow-hidden">
+                                    <div class="absolute right-0 top-0 w-24 h-24 bg-cyan-500/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
+                                    <div class="flex items-start gap-4 relative z-10">
+                                        <div class="w-14 h-14 rounded-xl bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors shadow-lg shadow-cyan-500/10">
+                                            <i class="fa-solid fa-database text-2xl text-cyan-500"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-white text-lg group-hover:text-cyan-500 transition-colors">Database</h4>
+                                            <p class="text-xs text-slate-400 mt-1 line-clamp-2">SQL, NoSQL, design database.</p>
+                                            <div class="mt-3 flex items-center gap-2 text-[10px] font-bold text-cyan-500 bg-cyan-500/10 w-fit px-2 py-0.5 rounded">
+                                                <span>PELAJARI</span> <i class="fa-solid fa-arrow-right"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Card 8: Mobile Development -->
+                                <div onclick="openMateri('mobile')" class="glass-panel p-5 rounded-2xl hover:bg-white/5 transition-all cursor-pointer group border border-white/5 hover:border-purple-500/50 relative overflow-hidden">
+                                    <div class="absolute right-0 top-0 w-24 h-24 bg-purple-500/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
+                                    <div class="flex items-start gap-4 relative z-10">
+                                        <div class="w-14 h-14 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors shadow-lg shadow-purple-500/10">
+                                            <i class="fa-solid fa-mobile-alt text-2xl text-purple-500"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-white text-lg group-hover:text-purple-500 transition-colors">Mobile Development</h4>
+                                            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Android, iOS, React Native.</p>
+                                            <div class="mt-3 flex items-center gap-2 text-[10px] font-bold text-purple-500 bg-purple-500/10 w-fit px-2 py-0.5 rounded">
+                                                <span>PELAJARI</span> <i class="fa-solid fa-arrow-right"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Right Column: Leaderboard & Missions -->
@@ -585,18 +670,166 @@
                 <!-- OTHER PAGES (Hidden by default, structure maintained) -->
                 
                 <!-- Page: Learn -->
-                <div id="page-learn" class="page-section hidden max-w-2xl mx-auto py-10 px-6">
-                    <div id="learningPath" class="flex flex-col items-center gap-10 relative"></div>
+                <div id="page-learn" class="page-section hidden max-w-6xl mx-auto py-10 px-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Learning Path - Main Content -->
+                        <div class="lg:col-span-2">
+                            <div id="learningPath" class="flex flex-col items-center gap-10 relative"></div>
+                        </div>
+                        
+                        <!-- Character & Welcome Section - Sidebar -->
+                        <div class="space-y-6">
+                            <!-- Welcome Character -->
+                            <div class="glass-panel p-6 rounded-3xl text-center relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                                <div class="absolute inset-0 bg-gradient-to-br from-brand-primary/10 to-brand-accent/10 rounded-3xl"></div>
+                                <div class="relative z-10">
+                                    <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-4xl shadow-lg shadow-brand-primary/30 animate-bounce">
+                                        <i class="fa-solid fa-robot text-white"></i>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-white mb-2">CodeBot Assistant</h3>
+                                    <p class="text-sm text-slate-400 mb-4">Selamat belajar! Aku di sini untuk membantumu memahami dunia programming.</p>
+                                    
+                                    <!-- Progress Stats -->
+                                    <div class="grid grid-cols-2 gap-3 text-center">
+                                        <div class="bg-dark-bg/50 p-3 rounded-xl">
+                                            <div class="text-lg font-bold text-brand-primary" id="learn-current-level">1</div>
+                                            <div class="text-xs text-slate-400">Level</div>
+                                        </div>
+                                        <div class="bg-dark-bg/50 p-3 rounded-xl">
+                                            <div class="text-lg font-bold text-brand-secondary" id="learn-total-xp">0</div>
+                                            <div class="text-xs text-slate-400">XP</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Quick Tips -->
+                            <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-20 h-20 bg-brand-warning/10 rounded-bl-3xl"></div>
+                                <div class="relative z-10">
+                                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                        <i class="fa-solid fa-lightbulb text-brand-warning"></i>
+                                        Tips Belajar
+                                    </h4>
+                                    <div class="space-y-3">
+                                        <div class="flex items-start gap-3 p-3 bg-dark-bg/30 rounded-xl">
+                                            <i class="fa-solid fa-code text-brand-primary mt-1"></i>
+                                            <div>
+                                                <div class="text-sm font-bold text-white">Praktik Rutin</div>
+                                                <div class="text-xs text-slate-400">Coding setiap hari membuatmu mahir</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-3 p-3 bg-dark-bg/30 rounded-xl">
+                                            <i class="fa-solid fa-brain text-brand-secondary mt-1"></i>
+                                            <div>
+                                                <div class="text-sm font-bold text-white">Pahami Konsep</div>
+                                                <div class="text-xs text-slate-400">Jangan hanya menghafal, pahami alasannya</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-3 p-3 bg-dark-bg/30 rounded-xl">
+                                            <i class="fa-solid fa-users text-brand-accent mt-1"></i>
+                                            <div>
+                                                <div class="text-sm font-bold text-white">Diskusi</div>
+                                                <div class="text-xs text-slate-400">Belajar bersama teman lebih menyenangkan</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Achievement Preview -->
+                            <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-20 h-20 bg-brand-success/10 rounded-bl-3xl"></div>
+                                <div class="relative z-10">
+                                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                        <i class="fa-solid fa-trophy text-brand-success"></i>
+                                        Pencapaian Terbaru
+                                    </h4>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center gap-3 p-3 bg-dark-bg/30 rounded-xl">
+                                            <div class="w-10 h-10 rounded-full bg-brand-success/20 flex items-center justify-center">
+                                                <i class="fa-solid fa-star text-brand-success"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-bold text-white">First Steps</div>
+                                                <div class="text-xs text-slate-400">Menyelesaikan level pertama</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-3 p-3 bg-dark-bg/30 rounded-xl opacity-50">
+                                            <div class="w-10 h-10 rounded-full bg-slate-600/20 flex items-center justify-center">
+                                                <i class="fa-solid fa-fire text-slate-500"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-bold text-slate-500">Streak Master</div>
+                                                <div class="text-xs text-slate-500">7 hari berturut-turut</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Page: Leaderboard -->
-                <div id="page-leaderboard" class="page-section hidden max-w-2xl mx-auto py-10 px-6">
+                <div id="page-leaderboard" class="page-section hidden max-w-4xl mx-auto py-10 px-6">
                      <div class="text-center mb-10">
-                        <img src="https://d35aaqx5ub95lt.cloudfront.net/images/leagues/d4280fdf64d66de7390fe84802432a53.svg" class="w-32 mx-auto mb-6 drop-shadow-[0_0_30px_rgba(251,191,36,0.4)] animate-float">
+                        <div class="relative inline-block">
+                            <img src="https://d35aaqx5ub95lt.cloudfront.net/images/leagues/d4280fdf64d66de7390fe84802432a53.svg" class="w-32 mx-auto mb-6 drop-shadow-[0_0_30px_rgba(251,191,36,0.4)] animate-float">
+                            <div class="absolute -top-2 -right-2 w-8 h-8 bg-brand-warning rounded-full flex items-center justify-center animate-pulse">
+                                <i class="fa-solid fa-crown text-slate-900 text-sm"></i>
+                            </div>
+                        </div>
                         <h2 class="text-4xl font-black text-brand-warning tracking-tight">Liga Diamond</h2>
                         <p class="text-slate-400 text-sm mt-2">7 hari tersisa. 10 teratas naik divisi.</p>
+
+                        <!-- League Progress -->
+                        <div class="mt-6 max-w-md mx-auto">
+                            <div class="flex justify-between text-xs text-slate-400 mb-2">
+                                <span>Progress Liga</span>
+                                <span id="league-progress">75%</span>
+                            </div>
+                            <div class="w-full h-2 bg-dark-bg rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-brand-warning to-yellow-400 rounded-full animate-pulse" id="league-progress-bar" style="width: 75%"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="glass-panel rounded-3xl overflow-hidden border border-white/10" id="leaderboard-container"></div>
+
+                    <!-- Top 3 Podium -->
+                    <div class="grid grid-cols-3 gap-4 mb-8" id="podium-container">
+                        <!-- Podium akan di-generate secara dinamis -->
+                    </div>
+
+                    <!-- Full Leaderboard -->
+                    <div class="glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+                        <div class="p-6 border-b border-white/10 bg-gradient-to-r from-slate-900/50 to-slate-800/50">
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-trophy text-brand-warning animate-bounce"></i>
+                                Hall of Fame
+                            </h3>
+                            <p class="text-slate-400 text-sm mt-1 flex items-center gap-2">
+                                <i class="fa-solid fa-crown text-yellow-400 text-xs"></i>
+                                Para juara coding terhebat di liga ini
+                            </p>
+                        </div>
+                        <div class="divide-y divide-white/5 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent" id="leaderboard-full-list">
+                            <!-- Leaderboard akan di-generate secara dinamis -->
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="p-6 border-t border-white/10">
+                            <div class="flex gap-3 justify-center">
+                                <button onclick="scrollToMyRank()" class="flex-1 px-4 py-3 bg-brand-primary/20 hover:bg-brand-primary/30 border border-brand-primary/30 rounded-xl text-brand-primary font-bold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-user-circle"></i>
+                                    Lihat Posisi Saya
+                                </button>
+                                <button id="load-more-leaderboard" onclick="loadMoreLeaderboard()" class="flex-1 px-4 py-3 bg-dark-bg/50 hover:bg-dark-bg border border-white/10 rounded-xl text-white font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-brand-primary/20 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                    Lihat Lebih Banyak
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Page: Shop -->
@@ -1026,6 +1259,209 @@
                         <li><strong class="text-brand-success">Accountability:</strong> Tanggung jawab atas keputusan AI.</li>
                     </ul>
                 `
+            },
+            web: {
+                title: "Web Development",
+                content: `
+                    <p><strong class="text-pink-500">Web Development</strong> adalah proses pembuatan dan pemeliharaan situs web menggunakan berbagai teknologi dan bahasa pemrograman.</p>
+                    
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">1. HTML (HyperText Markup Language)</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-pink-500">Struktur:</strong> Elemen dasar seperti &lt;html&gt;, &lt;head&gt;, &lt;body&gt;.</li>
+                        <li><strong class="text-pink-500">Semantic HTML:</strong> &lt;header&gt;, &lt;nav&gt;, &lt;main&gt;, &lt;article&gt;, &lt;footer&gt;.</li>
+                        <li><strong class="text-pink-500">Forms:</strong> Input, textarea, select, button untuk interaksi user.</li>
+                        <li><strong class="text-pink-500">Accessibility:</strong> ARIA attributes, alt text untuk gambar.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">2. CSS (Cascading Style Sheets)</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-pink-500">Selectors:</strong> Element, class, id, attribute selectors.</li>
+                        <li><strong class="text-pink-500">Box Model:</strong> Content, padding, border, margin.</li>
+                        <li><strong class="text-pink-500">Layout:</strong> Flexbox, CSS Grid, positioning.</li>
+                        <li><strong class="text-pink-500">Responsive Design:</strong> Media queries, mobile-first approach.</li>
+                        <li><strong class="text-pink-500">Animations:</strong> Transitions, keyframes, transforms.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">3. JavaScript</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-pink-500">DOM Manipulation:</strong> Mengubah HTML dan CSS secara dinamis.</li>
+                        <li><strong class="text-pink-500">Event Handling:</strong> Click, submit, scroll events.</li>
+                        <li><strong class="text-pink-500">Async Programming:</strong> Promises, async/await, fetch API.</li>
+                        <li><strong class="text-pink-500">ES6+ Features:</strong> Arrow functions, destructuring, modules.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">4. Frameworks & Libraries</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-pink-500">Frontend:</strong> React, Vue.js, Angular untuk UI components.</li>
+                        <li><strong class="text-pink-500">Backend:</strong> Node.js, Express.js, Django, Ruby on Rails.</li>
+                        <li><strong class="text-pink-500">CSS Frameworks:</strong> Bootstrap, Tailwind CSS, Material UI.</li>
+                        <li><strong class="text-pink-500">Build Tools:</strong> Webpack, Vite, Babel untuk development.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">5. Web Standards & Best Practices</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-pink-500">SEO:</strong> Search Engine Optimization untuk visibility.</li>
+                        <li><strong class="text-pink-500">Performance:</strong> Code splitting, lazy loading, caching.</li>
+                        <li><strong class="text-pink-500">Security:</strong> HTTPS, input validation, XSS prevention.</li>
+                        <li><strong class="text-pink-500">Cross-browser Compatibility:</strong> Testing di berbagai browser.</li>
+                    </ul>
+                `
+            },
+            security: {
+                title: "Cybersecurity",
+                content: `
+                    <p><strong class="text-red-500">Cybersecurity</strong> adalah praktik melindungi sistem, jaringan, dan data dari ancaman digital dan serangan cyber.</p>
+                    
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">1. Konsep Dasar Keamanan</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-red-500">CIA Triad:</strong> Confidentiality, Integrity, Availability.</li>
+                        <li><strong class="text-red-500">Authentication:</strong> Verifikasi identitas (password, biometrics, MFA).</li>
+                        <li><strong class="text-red-500">Authorization:</strong> Kontrol akses ke sumber daya.</li>
+                        <li><strong class="text-red-500">Non-repudiation:</strong> Tidak dapat menyangkal tindakan yang dilakukan.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">2. Enkripsi & Kriptografi</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-red-500">Symmetric Encryption:</strong> AES, DES - kunci sama untuk encrypt/decrypt.</li>
+                        <li><strong class="text-red-500">Asymmetric Encryption:</strong> RSA, ECC - public/private key pair.</li>
+                        <li><strong class="text-red-500">Hash Functions:</strong> SHA-256, MD5 untuk integrity checking.</li>
+                        <li><strong class="text-red-500">Digital Signatures:</strong> Memastikan authenticity dan non-repudiation.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">3. Jenis Serangan Cyber</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-red-500">Malware:</strong> Virus, worm, trojan, ransomware.</li>
+                        <li><strong class="text-red-500">Phishing:</strong> Serangan social engineering via email/website palsu.</li>
+                        <li><strong class="text-red-500">DDoS:</strong> Distributed Denial of Service - membanjiri server dengan traffic.</li>
+                        <li><strong class="text-red-500">SQL Injection:</strong> Memanipulasi query database melalui input user.</li>
+                        <li><strong class="text-red-500">XSS:</strong> Cross-Site Scripting - menjalankan script berbahaya.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">4. Tools & Teknik Keamanan</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-red-500">Firewall:</strong> Filter traffic masuk/keluar berdasarkan rules.</li>
+                        <li><strong class="text-red-500">IDS/IPS:</strong> Intrusion Detection/Prevention Systems.</li>
+                        <li><strong class="text-red-500">VPN:</strong> Virtual Private Network untuk koneksi aman.</li>
+                        <li><strong class="text-red-500">Penetration Testing:</strong> Simulasi serangan untuk menemukan vulnerability.</li>
+                        <li><strong class="text-red-500">Security Auditing:</strong> Review sistem untuk compliance dan keamanan.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">5. Best Practices Cybersecurity</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-red-500">Zero Trust:</strong> Never trust, always verify.</li>
+                        <li><strong class="text-red-500">Regular Updates:</strong> Patch vulnerabilities segera.</li>
+                        <li><strong class="text-red-500">Backup:</strong> 3-2-1 rule: 3 copies, 2 media types, 1 offsite.</li>
+                        <li><strong class="text-red-500">Training:</strong> Edukasi user tentang security awareness.</li>
+                        <li><strong class="text-red-500">Incident Response:</strong> Plan untuk menangani breach.</li>
+                    </ul>
+                `
+            },
+            database: {
+                title: "Database Management",
+                content: `
+                    <p><strong class="text-cyan-500">Database</strong> adalah sistem terorganisir untuk menyimpan, mengelola, dan mengambil data secara efisien.</p>
+                    
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">1. Konsep Dasar Database</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-cyan-500">Data vs Information:</strong> Data mentah vs data yang bermakna.</li>
+                        <li><strong class="text-cyan-500">Entity & Attributes:</strong> Objek dan properti-propertinya.</li>
+                        <li><strong class="text-cyan-500">Relationships:</strong> Hubungan antara entities (one-to-one, one-to-many, many-to-many).</li>
+                        <li><strong class="text-cyan-500">Keys:</strong> Primary key, foreign key, candidate key.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">2. SQL (Structured Query Language)</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-cyan-500">DDL:</strong> Data Definition Language (CREATE, ALTER, DROP).</li>
+                        <li><strong class="text-cyan-500">DML:</strong> Data Manipulation Language (SELECT, INSERT, UPDATE, DELETE).</li>
+                        <li><strong class="text-cyan-500">DCL:</strong> Data Control Language (GRANT, REVOKE).</li>
+                        <li><strong class="text-cyan-500">TCL:</strong> Transaction Control Language (COMMIT, ROLLBACK).</li>
+                        <li><strong class="text-cyan-500">Joins:</strong> INNER, LEFT, RIGHT, FULL OUTER joins.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">3. NoSQL Databases</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-cyan-500">Document Stores:</strong> MongoDB - JSON-like documents.</li>
+                        <li><strong class="text-cyan-500">Key-Value Stores:</strong> Redis, DynamoDB - simple key-value pairs.</li>
+                        <li><strong class="text-cyan-500">Column-Family:</strong> Cassandra - columns grouped in families.</li>
+                        <li><strong class="text-cyan-500">Graph Databases:</strong> Neo4j - relationships-focused.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">4. Database Design</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-cyan-500">Normalization:</strong> Mengurangi redundancy (1NF, 2NF, 3NF, BCNF).</li>
+                        <li><strong class="text-cyan-500">ER Diagrams:</strong> Entity-Relationship modeling.</li>
+                        <li><strong class="text-cyan-500">Indexing:</strong> Mempercepat query dengan index structures.</li>
+                        <li><strong class="text-cyan-500">Partitioning:</strong> Membagi data besar menjadi bagian-bagian.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">5. Database Administration</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-cyan-500">Backup & Recovery:</strong> Strategi backup dan disaster recovery.</li>
+                        <li><strong class="text-cyan-500">Performance Tuning:</strong> Query optimization, indexing, caching.</li>
+                        <li><strong class="text-cyan-500">Security:</strong> User management, encryption, audit trails.</li>
+                        <li><strong class="text-cyan-500">Monitoring:</strong> Track performance metrics dan health.</li>
+                        <li><strong class="text-cyan-500">Scaling:</strong> Vertical vs horizontal scaling, replication.</li>
+                    </ul>
+                `
+            },
+            mobile: {
+                title: "Mobile Development",
+                content: `
+                    <p><strong class="text-purple-500">Mobile Development</strong> adalah proses pembuatan aplikasi untuk perangkat mobile seperti smartphone dan tablet.</p>
+                    
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">1. Platform Mobile</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-purple-500">Native Development:</strong> iOS (Swift/Objective-C), Android (Kotlin/Java).</li>
+                        <li><strong class="text-purple-500">Cross-Platform:</strong> Satu codebase untuk multiple platforms.</li>
+                        <li><strong class="text-purple-500">Hybrid:</strong> Web technologies wrapped in native container.</li>
+                        <li><strong class="text-purple-500">Progressive Web Apps:</strong> Web apps dengan capabilities native.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">2. Android Development</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-purple-500">Activities & Fragments:</strong> Komponen UI dan lifecycle management.</li>
+                        <li><strong class="text-purple-500">Material Design:</strong> Design language untuk Android apps.</li>
+                        <li><strong class="text-purple-500">Jetpack Components:</strong> Architecture, UI, foundation libraries.</li>
+                        <li><strong class="text-purple-500">Kotlin:</strong> Modern programming language untuk Android.</li>
+                        <li><strong class="text-purple-500">Android Studio:</strong> Official IDE untuk Android development.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">3. iOS Development</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-purple-500">UIKit & SwiftUI:</strong> Frameworks untuk UI development.</li>
+                        <li><strong class="text-purple-500">View Controllers:</strong> Managing views dan navigation.</li>
+                        <li><strong class="text-purple-500">Core Data:</strong> Framework untuk data persistence.</li>
+                        <li><strong class="text-purple-500">Xcode:</strong> IDE untuk iOS development.</li>
+                        <li><strong class="text-purple-500">App Store Guidelines:</strong> Requirements untuk publish apps.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">4. Cross-Platform Frameworks</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-purple-500">React Native:</strong> JavaScript framework dari Facebook.</li>
+                        <li><strong class="text-purple-500">Flutter:</strong> Dart framework dari Google.</li>
+                        <li><strong class="text-purple-500">Xamarin:</strong> .NET framework dari Microsoft.</li>
+                        <li><strong class="text-purple-500">Ionic:</strong> Hybrid framework dengan Angular.</li>
+                        <li><strong class="text-purple-500">Cordova/PhoneGap:</strong> Web technologies dalam native wrapper.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">5. Mobile App Best Practices</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-purple-500">UI/UX Design:</strong> User-centered design, intuitive navigation.</li>
+                        <li><strong class="text-purple-500">Performance:</strong> Optimize battery, memory, network usage.</li>
+                        <li><strong class="text-purple-500">Security:</strong> Data encryption, secure API communication.</li>
+                        <li><strong class="text-purple-500">Testing:</strong> Unit tests, integration tests, UI tests.</li>
+                        <li><strong class="text-purple-500">App Store Optimization:</strong> Improve visibility dan downloads.</li>
+                    </ul>
+
+                    <h4 class="text-lg font-bold text-white mt-4 mb-2">6. Mobile Technologies</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong class="text-purple-500">Push Notifications:</strong> Firebase Cloud Messaging, APNs.</li>
+                        <li><strong class="text-purple-500">Location Services:</strong> GPS, geofencing, maps integration.</li>
+                        <li><strong class="text-purple-500">Sensors:</strong> Accelerometer, gyroscope, camera, microphone.</li>
+                        <li><strong class="text-purple-500">Offline Support:</strong> Local storage, sync strategies.</li>
+                        <li><strong class="text-purple-500">App Distribution:</strong> Beta testing, CI/CD pipelines.</li>
+                    </ul>
+                `
             }
         };
 
@@ -1063,6 +1499,29 @@
             { id: 14, q: 'Menambah item ke list?', options: [{ t: 'append()', c: true }, { t: 'add()', c: false }] },
             { id: 15, q: 'Indeks pertama dalam list?', options: [{ t: '0', c: true }, { t: '1', c: false }] }
         ];
+
+        // Data penjelasan untuk setiap soal
+        const explanationsData = {
+            1: 'Fungsi print() adalah cara standar untuk menampilkan output di Python. Fungsi ini akan mencetak teks atau nilai ke console.',
+            2: 'File Python menggunakan ekstensi .py. Ini adalah konvensi yang dikenali oleh interpreter Python dan editor kode.',
+            3: 'Nama variabel di Python harus dimulai dengan huruf atau underscore, tidak boleh dimulai dengan angka. "nama_saya" valid karena dimulai dengan huruf.',
+            4: 'String adalah tipe data yang digunakan untuk menyimpan teks atau karakter di Python. Contoh: "Hello World".',
+            5: 'Komentar di Python menggunakan simbol #. Semua teks setelah # dalam satu baris akan diabaikan oleh interpreter.',
+            6: '5 > 3 adalah pernyataan benar, sehingga menghasilkan nilai Boolean True. Operator perbandingan mengembalikan True atau False.',
+            7: 'range(3) menghasilkan sequence [0, 1, 2], sehingga loop for akan berjalan 3 kali untuk setiap nilai dalam sequence tersebut.',
+            8: 'Operator logika "DAN" di Python adalah "and". Operator ini mengembalikan True jika kedua operand bernilai True.',
+            9: 'Loop while akan terus berjalan selama kondisi yang diberikan bernilai True. Jika kondisi selalu True, maka loop akan berjalan selamanya.',
+            10: 'Di Python, "else if" disingkat menjadi "elif". Ini digunakan untuk mengecek kondisi tambahan dalam struktur if-elif-else.',
+            11: 'List di Python dibuat menggunakan tanda kurung siku []. Contoh: my_list = [1, 2, 3].',
+            12: 'Dictionary di Python dibuat menggunakan tanda kurung kurawal {}. Contoh: my_dict = {"key": "value"}.',
+            13: 'Fungsi len() digunakan untuk menghitung panjang (jumlah elemen) dari list, string, atau struktur data lainnya.',
+            14: 'Method append() digunakan untuk menambahkan elemen baru ke akhir list. Contoh: my_list.append("new_item").',
+            15: 'Indexing di Python dimulai dari 0. Jadi elemen pertama dalam list memiliki indeks 0, bukan 1.'
+        };
+
+        function getExplanation(questionId) {
+            return explanationsData[questionId] || 'Penjelasan untuk soal ini belum tersedia.';
+        }
 
         let userState = { name: "Guest", initial: "G", xp: 10, gems: 10, currentLevel: 1 };
         let currentActiveQuestion = null;
@@ -1150,6 +1609,10 @@
             safeSetText('profile-total-xp', userState.xp);
             safeSetText('mobile-xp', userState.xp);
             safeSetText('dash-xp', userState.xp);
+            
+            // Update sidebar belajar
+            safeSetText('learn-current-level', userState.currentLevel);
+            safeSetText('learn-total-xp', userState.xp);
             
             safeSetText('mobile-gems', userState.gems);
             safeSetText('shop-gems', userState.gems);
@@ -1323,8 +1786,32 @@
             } else {
                 selectedOptionBtn.classList.remove('border-brand-primary', 'bg-brand-primary/10');
                 selectedOptionBtn.classList.add('border-brand-danger', 'bg-brand-danger/20');
-                feedbackArea.className = "mb-4 p-4 rounded-xl font-bold flex items-center gap-3 bg-brand-danger/10 text-brand-danger border border-brand-danger/20";
-                feedbackArea.innerHTML = '<i class="fa-solid fa-circle-xmark text-2xl"></i> <div><div class="text-lg">Salah</div><div class="text-sm font-normal text-slate-300">Coba lagi!</div></div>';
+                
+                // Cari jawaban yang benar
+                const correctOption = currentActiveQuestion.options.find(opt => opt.c === true);
+                const correctIndex = currentActiveQuestion.options.findIndex(opt => opt.c === true) + 1;
+                
+                feedbackArea.className = "mb-4 p-4 rounded-xl font-bold bg-brand-danger/10 text-brand-danger border border-brand-danger/20";
+                feedbackArea.innerHTML = `
+                    <i class="fa-solid fa-circle-xmark text-2xl"></i> 
+                    <div class="flex-1">
+                        <div class="text-lg">Jawaban Salah</div>
+                        <div class="text-sm font-normal text-slate-300 mt-1">
+                            Jawaban yang benar adalah: <strong class="text-white">${correctIndex}. ${correctOption.t}</strong>
+                        </div>
+                        <div class="text-xs text-slate-400 mt-2">
+                            ${getExplanation(currentActiveQuestion.id)}
+                        </div>
+                    </div>
+                `;
+                
+                // Ubah tombol check menjadi coba lagi
+                checkBtn.innerText = "COBA LAGI";
+                checkBtn.className = 'w-full py-4 rounded-2xl bg-brand-warning text-slate-900 font-black text-lg uppercase tracking-widest btn-3d border-b-yellow-700 hover:brightness-110 shadow-lg cursor-pointer';
+                checkBtn.onclick = () => {
+                    // Reset modal untuk mencoba lagi
+                    openLesson(currentActiveQuestion.id);
+                };
             }
         }
 
@@ -1363,6 +1850,17 @@
             const activeNav = document.getElementById('nav-' + pageId);
             if(activeNav) activeNav.classList.add('nav-item-active');
             
+            // Update UI elements when switching to learn page
+            if(pageId === 'learn') {
+                updateUserUI();
+            }
+            
+            // Render leaderboard when switching to leaderboard page
+            if(pageId === 'leaderboard') {
+                leaderboardDisplayCount = 10; // Reset to initial count
+                renderLeaderboard();
+            }
+            
             const mobileNavs = ['learn', 'leaderboard', 'shop', 'profile'];
             mobileNavs.forEach(id => {
                 const btn = document.getElementById('mobile-nav-' + id);
@@ -1374,20 +1872,45 @@
         }
 
         let leaderboardData = [
-            { name: "Satoshi", xp: 3200, initial: "S", color: "from-orange-400 to-red-500" },
-            { name: "AI_Bot", xp: 2800, initial: "A", color: "from-blue-400 to-indigo-500" },
-            { name: "Linus", xp: 2450, initial: "L", color: "from-green-400 to-emerald-500" },
-            { name: "Cyber", xp: 1900, initial: "C", color: "from-purple-400 to-pink-500" },
-            { name: "Pixel", xp: 450, initial: "P", color: "from-teal-400 to-cyan-500" }
+            { name: "ProCoder_2025", xp: 3120, initial: "P", color: "from-yellow-400 to-orange-500" },
+            { name: "Alex_Code", xp: 2450, initial: "A", color: "from-slate-400 to-slate-600" },
+            { name: "TechWizard", xp: 2180, initial: "T", color: "from-amber-400 to-amber-600" },
+            { name: "CodeNinja", xp: 1950, initial: "C", color: "from-red-400 to-pink-500" },
+            { name: "PythonMaster", xp: 1780, initial: "P", color: "from-blue-400 to-indigo-500" },
+            { name: "DevStudent", xp: 1620, initial: "D", color: "from-green-400 to-emerald-500" },
+            { name: "AlgoExpert", xp: 1490, initial: "A", color: "from-purple-400 to-violet-500" },
+            { name: "ScriptKid", xp: 1320, initial: "S", color: "from-cyan-400 to-teal-500" },
+            { name: "ByteMaster", xp: 1180, initial: "B", color: "from-indigo-400 to-purple-500" },
+            { name: "CodeWarrior", xp: 1050, initial: "C", color: "from-orange-400 to-red-500" },
+            { name: "DataMiner", xp: 920, initial: "D", color: "from-pink-400 to-rose-500" },
+            { name: "WebDev", xp: 780, initial: "W", color: "from-emerald-400 to-green-500" },
+            { name: "PixelArt", xp: 650, initial: "P", color: "from-teal-400 to-cyan-500" },
+            { name: "CyberSec", xp: 520, initial: "C", color: "from-red-400 to-rose-500" },
+            { name: "GameDev", xp: 400, initial: "G", color: "from-purple-400 to-pink-500" },
+            { name: "MobileDev", xp: 320, initial: "M", color: "from-blue-400 to-indigo-500" },
+            { name: "CloudEng", xp: 250, initial: "C", color: "from-indigo-400 to-purple-500" },
+            { name: "AIEng", xp: 180, initial: "A", color: "from-emerald-400 to-green-500" },
+            { name: "DevOps", xp: 120, initial: "D", color: "from-orange-400 to-red-500" },
+            { name: "UXDesigner", xp: 80, initial: "U", color: "from-pink-400 to-rose-500" }
         ];
 
+        // Leaderboard pagination state
+        let leaderboardDisplayCount = 10;
+
         function renderLeaderboard() {
-            const container = document.getElementById('leaderboard-container');
+            const podiumContainer = document.getElementById('podium-container');
+            const fullListContainer = document.getElementById('leaderboard-full-list');
             const widgetContent = document.getElementById('widget-leaderboard-content');
-            if (!container) return;
+            const userRankElement = document.getElementById('user-rank');
+            const userNameElement = document.getElementById('user-name');
+            const userXpElement = document.getElementById('user-xp');
+            const leagueProgressElement = document.getElementById('league-progress');
+            const leagueProgressBarElement = document.getElementById('league-progress-bar');
+
+            if (!podiumContainer || !fullListContainer) return;
 
             const currentUserEntry = {
-                name: userState.name + " (Anda)",
+                name: userState.name,
                 xp: userState.xp,
                 initial: userState.initial,
                 color: "from-brand-primary to-brand-accent",
@@ -1396,34 +1919,130 @@
             let combinedList = [...leaderboardData, currentUserEntry];
             combinedList.sort((a, b) => b.xp - a.xp);
 
-            container.innerHTML = "";
-            if(widgetContent) widgetContent.innerHTML = "";
+            // Calculate league progress (assuming Diamond league requires 3000 XP)
+            const diamondThreshold = 3000;
+            const leagueProgress = Math.min((userState.xp / diamondThreshold) * 100, 100);
+            if (leagueProgressElement) leagueProgressElement.textContent = Math.round(leagueProgress) + "%";
+            if (leagueProgressBarElement) leagueProgressBarElement.style.width = leagueProgress + "%";
 
-            combinedList.forEach((user, index) => {
+            // Find user rank
+            const userRank = combinedList.findIndex(user => user.isUser) + 1;
+            if (userRankElement) userRankElement.textContent = userRank;
+            if (userNameElement) userNameElement.textContent = userState.name;
+            if (userXpElement) userXpElement.textContent = userState.xp + " XP";
+
+            // Render Podium (Top 3)
+            podiumContainer.innerHTML = "";
+            const top3 = combinedList.slice(0, 3);
+
+            // Create podium positions (2nd, 1st, 3rd)
+            const podiumOrder = [top3[1], top3[0], top3[2]]; // 2nd, 1st, 3rd
+            const podiumClasses = [
+                "glass-panel p-6 rounded-2xl text-center relative overflow-hidden group hover:-translate-y-2 transition-all duration-300 border border-white/10", // 2nd
+                "glass-panel p-8 rounded-2xl text-center relative overflow-hidden group hover:-translate-y-2 transition-all duration-300 border-2 border-brand-warning/50 bg-gradient-to-br from-brand-warning/10 to-yellow-500/10", // 1st
+                "glass-panel p-6 rounded-2xl text-center relative overflow-hidden group hover:-translate-y-2 transition-all duration-300 border border-white/10" // 3rd
+            ];
+            const podiumBackgrounds = [
+                "bg-gradient-to-br from-slate-600/20 to-slate-800/20",
+                "",
+                "bg-gradient-to-br from-amber-600/20 to-amber-800/20"
+            ];
+            const podiumIcons = ["fa-medal", "fa-trophy", "fa-medal"];
+            const podiumColors = ["text-slate-300", "text-brand-warning", "text-amber-300"];
+            const podiumSizes = ["w-16 h-16", "w-20 h-20", "w-16 h-16"];
+
+            podiumOrder.forEach((user, index) => {
+                if (!user) return;
+
+                const rank = index === 0 ? 2 : index === 1 ? 1 : 3;
+                const html = `
+                    <div class="${podiumClasses[index]}">
+                        ${index === 1 ? '<div class="absolute -top-4 left-1/2 transform -translate-x-1/2"><i class="fa-solid fa-crown text-3xl text-brand-warning animate-bounce"></i></div>' : ''}
+                        <div class="absolute inset-0 ${podiumBackgrounds[index]}"></div>
+                        <div class="relative z-10">
+                            <div class="${podiumSizes[index]} mx-auto mb-3 rounded-full bg-gradient-to-br ${user.color} flex items-center justify-center text-2xl shadow-lg ${index === 1 ? 'shadow-brand-warning/30 animate-pulse' : ''}">
+                                <i class="fa-solid fa-user text-white"></i>
+                            </div>
+                            <div class="text-sm font-bold text-white mb-1">${user.name}</div>
+                            <div class="text-xs ${index === 1 ? 'text-brand-warning font-bold' : 'text-slate-400'} mb-2">${user.xp} XP</div>
+                            <div class="inline-flex items-center gap-1 px-3 py-1 ${index === 1 ? 'bg-brand-warning/20 border border-brand-warning/30' : index === 0 ? 'bg-slate-600/50' : 'bg-amber-600/50'} rounded-full text-xs font-bold ${podiumColors[index]}">
+                                <i class="fa-solid ${podiumIcons[index]}"></i> #${rank}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                podiumContainer.innerHTML += html;
+            });
+
+            // Render Full Leaderboard (with pagination)
+            fullListContainer.innerHTML = "";
+            const displayList = combinedList.slice(0, leaderboardDisplayCount);
+            displayList.forEach((user, index) => {
                 const rank = index + 1;
                 let rankColor = "text-slate-400";
                 if (rank === 1) rankColor = "text-yellow-400";
                 if (rank === 2) rankColor = "text-slate-300";
                 if (rank === 3) rankColor = "text-orange-400";
 
-                const bgClass = user.isUser ? "bg-brand-primary/10 border-brand-primary/30" : "hover:bg-white/5 border-transparent";
+                const bgClass = user.isUser ? "bg-brand-primary/5 border-l-4 border-brand-primary" : rank <= 3 ? "bg-gradient-to-r from-yellow-500/5 to-orange-500/5 border-l-4 border-yellow-400/50" : "hover:bg-white/5";
+                const xpChange = user.isUser ? "+25" : ["+15", "+8", "+12", "+5"][index % 4] || "+0";
                 
-                // Full List Item
+                // Special badges for top 3
+                let badgeHtml = "";
+                if (rank === 1) badgeHtml = '<span class="ml-2 px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full border border-yellow-400/30">👑 Champion</span>';
+                else if (rank === 2) badgeHtml = '<span class="ml-2 px-2 py-1 bg-slate-400/20 text-slate-300 text-xs rounded-full border border-slate-400/30">🥈 Runner-up</span>';
+                else if (rank === 3) badgeHtml = '<span class="ml-2 px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded-full border border-orange-400/30">🥉 Third</span>';
+
                 const html = `
-                    <div class="flex items-center p-4 border-b border-white/5 ${bgClass} transition">
-                        <div class="font-bold ${rankColor} w-8 text-center text-lg">${rank}</div>
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-br ${user.color} flex items-center justify-center font-bold text-white shadow-lg mr-4 text-sm border border-white/10">
-                            ${user.initial}
+                    <div class="p-4 ${bgClass} transition-all duration-300 group hover:scale-[1.02] ${rank <= 3 ? 'shadow-lg shadow-yellow-400/10 animate-slide-in-up animate-champion-glow' : 'animate-slide-in-up'}" style="animation-delay: ${index * 0.1}s" ${user.isUser ? 'data-is-user="true"' : ''}>
+                        <div class="flex items-center gap-4">
+                            <div class="relative">
+                                <div class="w-12 h-12 rounded-full ${user.isUser ? 'bg-brand-primary/20 ring-2 ring-brand-primary/50' : rank <= 3 ? 'bg-gradient-to-br from-yellow-400 to-orange-500 ring-2 ring-yellow-400/50' : 'bg-slate-600'} flex items-center justify-center text-sm font-bold ${user.isUser ? 'text-brand-primary' : 'text-white'} overflow-hidden ${rank <= 3 ? 'animate-pulse' : ''}">
+                                    ${user.isUser ? 
+                                        `<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}" alt="${user.name}" class="w-full h-full object-cover">` :
+                                        `<div class="w-full h-full bg-gradient-to-br ${user.color} flex items-center justify-center text-white font-bold text-lg">${user.initial}</div>`
+                                    }
+                                </div>
+                                ${rank <= 3 ? '<div class="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-xs animate-bounce">🏆</div>' : ''}
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold ${user.isUser ? 'text-brand-primary' : rank <= 3 ? 'text-yellow-400' : 'text-white'} flex items-center gap-2">
+                                    ${user.name}
+                                    ${user.isUser ? '<i class="fa-solid fa-star text-brand-warning text-xs animate-pulse"></i>' : ''}
+                                    ${badgeHtml}
+                                </div>
+                                <div class="text-sm text-slate-400 flex items-center gap-2">
+                                    <i class="fa-solid fa-bolt ${rank <= 3 ? 'text-yellow-400' : 'text-yellow-400'}"></i>
+                                    ${user.xp} XP
+                                    ${rank <= 3 ? '<span class="text-yellow-400 font-bold">(Top Tier)</span>' : ''}
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-bold text-green-400 flex items-center gap-1">
+                                    <i class="fa-solid fa-arrow-up"></i>
+                                    ${xpChange}
+                                </div>
+                                <div class="text-xs text-slate-400">hari ini</div>
+                            </div>
                         </div>
-                        <div class="flex-1 font-bold ${user.isUser ? 'text-brand-primary' : 'text-white'}">${user.name}</div>
-                        <div class="font-mono font-bold text-slate-300 text-sm">${user.xp} XP</div>
                     </div>
                 `;
-                container.innerHTML += html;
+                fullListContainer.innerHTML += html;
+            });
 
-                // Widget List Item (Simpler)
-                if(widgetContent && index < 5) {
-                     widgetContent.innerHTML += `
+            // Widget List (for sidebar)
+            if(widgetContent) {
+                widgetContent.innerHTML = "";
+                combinedList.slice(0, 5).forEach((user, index) => {
+                    const rank = index + 1;
+                    let rankColor = "text-slate-400";
+                    if (rank === 1) rankColor = "text-yellow-400";
+                    if (rank === 2) rankColor = "text-slate-300";
+                    if (rank === 3) rankColor = "text-orange-400";
+
+                    const bgClass = user.isUser ? "bg-brand-primary/10 border-brand-primary/30" : "hover:bg-white/5 border-transparent";
+
+                    widgetContent.innerHTML += `
                         <div class="flex items-center gap-3 p-2 rounded-xl border ${bgClass} transition-colors">
                             <div class="font-mono font-bold w-6 text-center ${rankColor}">#${rank}</div>
                             <div class="w-8 h-8 rounded-full bg-dark-bg flex items-center justify-center font-bold text-xs text-slate-300 shadow-sm border border-white/10">
@@ -1433,8 +2052,95 @@
                             <div class="font-mono font-bold text-slate-400 text-xs">${user.xp} XP</div>
                         </div>
                     `;
+                });
+            }
+            
+            // Handle load more button visibility
+            const loadMoreBtn = document.getElementById('load-more-leaderboard');
+            if (loadMoreBtn) {
+                if (leaderboardDisplayCount >= combinedList.length) {
+                    loadMoreBtn.style.display = 'none';
+                } else {
+                    loadMoreBtn.style.display = 'inline-block';
                 }
-            });
+            }
+        }
+
+        function loadMoreLeaderboard() {
+            const loadMoreBtn = document.getElementById('load-more-leaderboard');
+            leaderboardDisplayCount += 10; // Load 10 more players
+            
+            // Get current leaderboard data
+            const currentUserEntry = {
+                name: userState.name,
+                xp: userState.xp,
+                initial: userState.initial,
+                color: "from-brand-primary to-brand-accent",
+                isUser: true
+            };
+            let combinedList = [...leaderboardData, currentUserEntry];
+            combinedList.sort((a, b) => b.xp - a.xp);
+            
+            // Check if we've loaded all players
+            if (leaderboardDisplayCount >= combinedList.length) {
+                leaderboardDisplayCount = combinedList.length;
+            }
+            
+            renderLeaderboard();
+        }
+
+        function scrollToMyRank() {
+            // First, ensure user is loaded in the leaderboard
+            const currentUserEntry = {
+                name: userState.name,
+                xp: userState.xp,
+                initial: userState.initial,
+                color: "from-brand-primary to-brand-accent",
+                isUser: true
+            };
+            let combinedList = [...leaderboardData, currentUserEntry];
+            combinedList.sort((a, b) => b.xp - a.xp);
+            
+            const userRank = combinedList.findIndex(user => user.isUser) + 1;
+            
+            // If user rank is beyond current display count, load more until user is visible
+            if (userRank > leaderboardDisplayCount) {
+                leaderboardDisplayCount = Math.ceil(userRank / 10) * 10; // Load up to next 10 boundary
+                renderLeaderboard();
+                
+                // Wait a bit for rendering to complete, then scroll
+                setTimeout(() => {
+                    scrollToUserElement();
+                }, 100);
+            } else {
+                scrollToUserElement();
+            }
+        }
+
+        function scrollToUserElement() {
+            const fullListContainer = document.getElementById('leaderboard-full-list');
+            const userElements = fullListContainer.querySelectorAll('[data-is-user="true"]');
+            
+            if (userElements.length > 0) {
+                const userElement = userElements[0];
+                
+                // Add temporary highlight effect
+                userElement.classList.add('ring-2', 'ring-brand-primary', 'ring-opacity-75', 'bg-brand-primary/10');
+                userElement.style.animation = 'pulse 2s ease-in-out 3';
+                
+                // Scroll to the element
+                userElement.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center',
+                    inline: 'nearest' 
+                });
+                
+                // Remove highlight after animation
+                setTimeout(() => {
+                    userElement.classList.remove('ring-2', 'ring-brand-primary', 'ring-opacity-75', 'bg-brand-primary/10');
+                    userElement.style.animation = '';
+                }, 6000); // Remove after 6 seconds
+            }
         }
     </script>
 </body>
